@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"allowImportingTsExtensions": true,
+		"paths": {
+			"@/*": ["./lib/*"]
+		}
+	},
+	"include": ["lib", "tests"]
+}

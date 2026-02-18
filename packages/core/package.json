@@ -1,0 +1,183 @@
+{
+	"name": "@oofp/core",
+	"version": "0.1.0-beta.1",
+	"description": "Functional programming library for TypeScript with algebraic data types and type-safe utilities",
+	"license": "MIT",
+	"author": "thexpert507",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/thexpert507/oofp.git",
+		"directory": "packages/core"
+	},
+	"keywords": [
+		"functional-programming",
+		"typescript",
+		"fp",
+		"monad",
+		"functor",
+		"maybe",
+		"either",
+		"task",
+		"reader",
+		"state",
+		"algebraic-data-types",
+		"type-safe"
+	],
+	"type": "module",
+	"files": ["dist"],
+	"publishConfig": {
+		"access": "public"
+	},
+	"exports": {
+		"./maybe-t": {
+			"types": "./dist/maybe-t/index.d.ts",
+			"import": "./dist/es/maybe-t.js",
+			"require": "./dist/cjs/maybe-t.cjs"
+		},
+		"./utils": {
+			"types": "./dist/utils/index.d.ts",
+			"import": "./dist/es/utils.js",
+			"require": "./dist/cjs/utils.cjs"
+		},
+		"./applicative": {
+			"types": "./dist/applicative.d.ts"
+		},
+		"./bi-compose": {
+			"types": "./dist/bi-compose.d.ts",
+			"import": "./dist/es/bi-compose.js",
+			"require": "./dist/cjs/bi-compose.cjs"
+		},
+		"./chain": {
+			"types": "./dist/chain.d.ts"
+		},
+		"./compose": {
+			"types": "./dist/compose.d.ts",
+			"import": "./dist/es/compose.js",
+			"require": "./dist/cjs/compose.cjs"
+		},
+		"./curry": {
+			"types": "./dist/curry.d.ts",
+			"import": "./dist/es/curry.js",
+			"require": "./dist/cjs/curry.cjs"
+		},
+		"./delayable": {
+			"types": "./dist/delayable.d.ts"
+		},
+		"./either": {
+			"types": "./dist/either.d.ts",
+			"import": "./dist/es/either.js",
+			"require": "./dist/cjs/either.cjs"
+		},
+		"./flow": {
+			"types": "./dist/flow.d.ts",
+			"import": "./dist/es/flow.js",
+			"require": "./dist/cjs/flow.cjs"
+		},
+		"./function": {
+			"types": "./dist/function.d.ts"
+		},
+		"./functor": {
+			"types": "./dist/functor.d.ts"
+		},
+		"./id": {
+			"types": "./dist/id.d.ts",
+			"import": "./dist/es/id.js",
+			"require": "./dist/cjs/id.cjs"
+		},
+		"./io": {
+			"types": "./dist/io.d.ts",
+			"import": "./dist/es/io.js",
+			"require": "./dist/cjs/io.cjs"
+		},
+		"./join": {
+			"types": "./dist/join.d.ts"
+		},
+		"./list": {
+			"types": "./dist/list.d.ts",
+			"import": "./dist/es/list.js",
+			"require": "./dist/cjs/list.cjs"
+		},
+		"./maybe": {
+			"types": "./dist/maybe.d.ts",
+			"import": "./dist/es/maybe.js",
+			"require": "./dist/cjs/maybe.cjs"
+		},
+		"./memo": {
+			"types": "./dist/memo.d.ts",
+			"import": "./dist/es/memo.js",
+			"require": "./dist/cjs/memo.cjs"
+		},
+		"./monad": {
+			"types": "./dist/monad.d.ts"
+		},
+		"./object": {
+			"types": "./dist/object.d.ts",
+			"import": "./dist/es/object.js",
+			"require": "./dist/cjs/object.cjs"
+		},
+		"./pipe": {
+			"types": "./dist/pipe.d.ts",
+			"import": "./dist/es/pipe.js",
+			"require": "./dist/cjs/pipe.cjs"
+		},
+		"./pointed": {
+			"types": "./dist/pointed.d.ts"
+		},
+		"./profunctor": {
+			"types": "./dist/profunctor.d.ts",
+			"import": "./dist/es/profunctor.js",
+			"require": "./dist/cjs/profunctor.cjs"
+		},
+		"./promise": {
+			"types": "./dist/promise.d.ts",
+			"import": "./dist/es/promise.js",
+			"require": "./dist/cjs/promise.cjs"
+		},
+		"./reader-task-either": {
+			"types": "./dist/reader-task-either.d.ts",
+			"import": "./dist/es/reader-task-either.js",
+			"require": "./dist/cjs/reader-task-either.cjs"
+		},
+		"./reader": {
+			"types": "./dist/reader.d.ts",
+			"import": "./dist/es/reader.js",
+			"require": "./dist/cjs/reader.cjs"
+		},
+		"./state": {
+			"types": "./dist/state.d.ts",
+			"import": "./dist/es/state.js",
+			"require": "./dist/cjs/state.cjs"
+		},
+		"./string": {
+			"types": "./dist/string.d.ts",
+			"import": "./dist/es/string.js",
+			"require": "./dist/cjs/string.cjs"
+		},
+		"./task-either": {
+			"types": "./dist/task-either.d.ts",
+			"import": "./dist/es/task-either.js",
+			"require": "./dist/cjs/task-either.cjs"
+		},
+		"./task": {
+			"types": "./dist/task.d.ts",
+			"import": "./dist/es/task.js",
+			"require": "./dist/cjs/task.cjs"
+		},
+		"./URIS": {
+			"types": "./dist/URIS.d.ts"
+		},
+		"./URIS2": {
+			"types": "./dist/URIS2.d.ts"
+		},
+		"./URIS3": {
+			"types": "./dist/URIS3.d.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsc -p ./tsconfig.build.json && vite build",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
+		"type-check": "tsc --noEmit",
+		"coverage": "vitest run --coverage"
+	}
+}

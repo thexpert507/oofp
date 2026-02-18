@@ -1,0 +1,55 @@
+{
+	"name": "@oofp/react",
+	"version": "0.1.0",
+	"description": "Functional React component model using Reader monads from @oofp/core",
+	"license": "MIT",
+	"author": "thexpert507",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/thexpert507/oofp.git",
+		"directory": "packages/react"
+	},
+	"keywords": [
+		"functional-programming",
+		"typescript",
+		"fp",
+		"react",
+		"reader",
+		"monad",
+		"components",
+		"type-safe"
+	],
+	"type": "module",
+	"files": ["dist"],
+	"publishConfig": {
+		"access": "public"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/es/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"scripts": {
+		"build": "tsc -p ./tsconfig.build.json && vite build",
+		"test": "echo 'No tests yet'",
+		"test:watch": "echo 'No tests yet'",
+		"type-check": "tsc --noEmit"
+	},
+	"peerDependencies": {
+		"@oofp/core": "workspace:*",
+		"react": "^18.0.0 || ^19.0.0",
+		"react-dom": "^18.0.0 || ^19.0.0"
+	},
+	"dependencies": {
+		"immer": "^10.1.1"
+	},
+	"devDependencies": {
+		"@oofp/core": "workspace:*",
+		"@types/react": "^19.0.2",
+		"@types/react-dom": "^19.0.2",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
+	}
+}

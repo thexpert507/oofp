@@ -1,0 +1,67 @@
+{
+	"name": "@oofp/http",
+	"version": "0.1.0",
+	"description": "Functional HTTP client library for TypeScript using @oofp/core",
+	"license": "MIT",
+	"author": "thexpert507",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/thexpert507/oofp.git",
+		"directory": "packages/http"
+	},
+	"keywords": [
+		"functional-programming",
+		"typescript",
+		"fp",
+		"http",
+		"client",
+		"fetch",
+		"reader-task-either",
+		"type-safe"
+	],
+	"type": "module",
+	"files": ["dist"],
+	"publishConfig": {
+		"access": "public"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/es/index.js",
+			"require": "./dist/cjs/index.cjs"
+		},
+		"./primitives": {
+			"types": "./dist/primitives.d.ts",
+			"import": "./dist/es/primitives.js",
+			"require": "./dist/cjs/primitives.cjs"
+		},
+		"./interceptors": {
+			"types": "./dist/interceptors.d.ts",
+			"import": "./dist/es/interceptors.js",
+			"require": "./dist/cjs/interceptors.cjs"
+		},
+		"./composition": {
+			"types": "./dist/composition.d.ts",
+			"import": "./dist/es/composition.js",
+			"require": "./dist/cjs/composition.cjs"
+		},
+		"./client": {
+			"types": "./dist/client.d.ts",
+			"import": "./dist/es/client.js",
+			"require": "./dist/cjs/client.cjs"
+		}
+	},
+	"scripts": {
+		"build": "tsc -p ./tsconfig.build.json && vite build",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
+		"type-check": "tsc --noEmit",
+		"coverage": "vitest run --coverage"
+	},
+	"peerDependencies": {
+		"@oofp/core": "workspace:*"
+	},
+	"devDependencies": {
+		"@oofp/core": "workspace:*"
+	}
+}

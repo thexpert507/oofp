@@ -1,0 +1,47 @@
+{
+	"name": "@oofp/saga",
+	"version": "0.1.0",
+	"description": "Saga pattern utility for transactional operations with automatic compensations using @oofp/core",
+	"license": "MIT",
+	"author": "thexpert507",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/thexpert507/oofp.git",
+		"directory": "packages/saga"
+	},
+	"keywords": [
+		"functional-programming",
+		"typescript",
+		"fp",
+		"saga",
+		"transactions",
+		"compensation",
+		"rollback",
+		"type-safe"
+	],
+	"type": "module",
+	"files": ["dist"],
+	"publishConfig": {
+		"access": "public"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/es/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"scripts": {
+		"build": "tsc -p ./tsconfig.build.json && vite build",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
+		"type-check": "tsc --noEmit",
+		"coverage": "vitest run --coverage"
+	},
+	"peerDependencies": {
+		"@oofp/core": "workspace:*"
+	},
+	"devDependencies": {
+		"@oofp/core": "workspace:*"
+	}
+}

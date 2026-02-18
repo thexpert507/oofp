@@ -1,0 +1,50 @@
+{
+	"name": "@oofp/query",
+	"version": "0.1.0-beta.1",
+	"description": "Functional query cache library for TypeScript with tag-based invalidation and telemetry",
+	"license": "MIT",
+	"author": "thexpert507",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/thexpert507/oofp.git",
+		"directory": "packages/query"
+	},
+	"keywords": [
+		"functional-programming",
+		"typescript",
+		"fp",
+		"query",
+		"cache",
+		"lru",
+		"redis",
+		"type-safe",
+		"telemetry"
+	],
+	"type": "module",
+	"main": "./dist/es/index.js",
+	"types": "./dist/index.d.ts",
+	"files": ["dist"],
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsc -p ./tsconfig.build.json && vite build",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
+		"type-check": "tsc --noEmit",
+		"coverage": "vitest run --coverage"
+	},
+	"peerDependencies": {
+		"@oofp/core": "workspace:*",
+		"redis": "^5.0.0"
+	},
+	"peerDependenciesMeta": {
+		"redis": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@oofp/core": "workspace:*",
+		"redis": "^5.9.0"
+	}
+}
