@@ -20,6 +20,9 @@
 		"type-safe"
 	],
 	"type": "module",
+	"main": "./dist/es/index.js",
+	"module": "./dist/es/index.js",
+	"types": "./dist/index.d.ts",
 	"files": ["dist"],
 	"publishConfig": {
 		"access": "public"

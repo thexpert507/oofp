@@ -29,6 +29,7 @@ export default defineConfig({
 				string: resolve(__dirname, "lib/string.ts"),
 				["task-either"]: resolve(__dirname, "lib/task-either.ts"),
 				task: resolve(__dirname, "lib/task.ts"),
+				io: resolve(__dirname, "lib/io.ts"),
 			},
 			name: "fp",
 			formats: ["es", "cjs"],
@@ -37,7 +38,7 @@ export default defineConfig({
 				return `${format}/${chunk}.js`;
 			},
 		},
-		rollupOptions: { external: ["ts-pattern"] },
+		rollupOptions: { external: [] },
 	},
 	plugins: [dts({ tsconfigPath: resolve(__dirname, "tsconfig.build.json") })],
 	test: { watch: false },
