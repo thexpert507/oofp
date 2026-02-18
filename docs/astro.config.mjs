@@ -6,7 +6,7 @@ import sitemap from "@astrojs/sitemap";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://oofp.dev",
+  site: "https://oofp.pages.dev",
   integrations: [
     starlight({
       title: "OOFP",
@@ -32,7 +32,7 @@ export default defineConfig({
           tag: "meta",
           attrs: {
             property: "og:image",
-            content: "https://oofp.dev/og-image.png",
+            content: "https://oofp.pages.dev/og-image.png",
           },
         },
         {
