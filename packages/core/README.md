@@ -1,14 +1,14 @@
 # @oofp/core
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/@oofp/core.svg?style=flat)](https://www.npmjs.com/package/@oofp/core)
 [![npm downloads](https://img.shields.io/npm/dm/@oofp/core.svg)](https://www.npmjs.com/package/@oofp/core)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/@oofp/core)](https://bundlephobia.com/package/@oofp/core)
-[![GitHub Stars](https://img.shields.io/github/stars/thexpert507/oofp-core.svg?style=social&label=Star)](https://github.com/thexpert507/oofp-core)
+[![GitHub Stars](https://img.shields.io/github/stars/thexpert507/oofp.svg?style=social&label=Star)](https://github.com/thexpert507/oofp)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/thexpert507/oofp-core/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/thexpert507/oofp/pulls)
 
-Una librería de programación funcional para TypeScript que proporciona tipos de datos algebraicos y utilidades para escribir código funcional de manera elegante y type-safe.
+A functional programming library for TypeScript providing algebraic data types and utilities for writing elegant, type-safe functional code.
 
 ## 🚀 Instalación
 
@@ -515,11 +515,9 @@ Las contribuciones son bienvenidas. Por favor:
 4. Push a la rama (`git push origin feature/nueva-caracteristica`)
 5. Abre un Pull Request
 
-## 📄 Licencia
+## License
 
-Este proyecto está bajo la licencia GPL-3.0 (GNU General Public License v3.0). Ver el archivo `LICENSE` para más detalles.
-
-Este programa es software libre: puedes redistribuirlo y/o modificarlo bajo los términos de la Licencia Pública General GNU publicada por la Free Software Foundation, ya sea la versión 3 de la Licencia, o (a tu elección) cualquier versión posterior.
+This project is licensed under the [MIT License](./LICENSE).
 
 ## 🔗 Links útiles
 

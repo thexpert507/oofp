@@ -1,6 +1,10 @@
 # @oofp/http
 
-Functional HTTP library for the candidate-evaluator monorepo. Built on top of `@oofp/core` with full TypeScript support.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/@oofp/http.svg?style=flat)](https://www.npmjs.com/package/@oofp/http)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+
+Functional HTTP client library for TypeScript. Built on top of `@oofp/core` using `ReaderTaskEither` for composable, type-safe HTTP calls.
 
 ## Features
 
@@ -16,8 +20,9 @@ Functional HTTP library for the candidate-evaluator monorepo. Built on top of `@
 ## Installation
 
 ```bash
-# Already installed as part of the monorepo
-pnpm install
+npm install @oofp/http
+# or
+pnpm add @oofp/http
 ```
 
 ## Quick Start
@@ -386,4 +391,4 @@ pnpm --filter @oofp/http type-check
 
 ## License
 
-Internal package for candidate-evaluator monorepo.
+This project is licensed under the [MIT License](./LICENSE).
