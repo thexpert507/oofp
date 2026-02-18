@@ -1,20 +1,6 @@
 /**
- * Copyright (C) 2025 thexpert507
- *
- * This file is part of @oofp/core.
- *
- * @oofp/core is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * Copyright (c) 2025 thexpert507
+ * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
 import { pipe } from "@/pipe";
@@ -99,7 +85,10 @@ export const sequenceObjectT3 =
 					(result: unknown) =>
 					(values: Values): Values =>
 						({ ...values, [key]: result }) as Values;
-				return pipe(acc, mo.apply(pipe(curr, mo.map(merge)))) as Kind3<F, R, E, Values>;
+				return pipe(
+					acc,
+					mo.chain((values) => pipe(curr, mo.map((result) => merge(result)(values)))),
+				) as Kind3<F, R, E, Values>;
 			}),
 		) as Result<F, R, E, Args>;
 	};

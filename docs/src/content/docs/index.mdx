@@ -1,0 +1,75 @@
+---
+title: OOFP — Functional Programming for TypeScript
+description: Type-safe algebraic data types, dependency injection, and composition utilities for building real-world TypeScript applications.
+template: splash
+hero:
+  tagline: Type-safe algebraic data types, dependency injection, and composition utilities for building real-world TypeScript applications.
+  actions:
+    - text: Get Started
+      link: /getting-started/introduction/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/thexpert507/oofp
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## Why OOFP?
+
+<CardGrid>
+  <Card title="Type-safe by default" icon="approve-check">
+    Every function, every monad, every composition is fully typed. TypeScript inference works end-to-end with no casts needed.
+  </Card>
+  <Card title="Real-world patterns" icon="rocket">
+    Built for production applications. ReaderTaskEither provides dependency injection, async operations, and error handling in a single type.
+  </Card>
+  <Card title="Zero dependencies" icon="seti:lock">
+    No runtime dependencies. Tree-shakeable modular imports keep your bundle small.
+  </Card>
+  <Card title="Composable" icon="puzzle">
+    Everything composes with `pipe` and `flow`. Build complex workflows from simple, reusable functions.
+  </Card>
+</CardGrid>
+
+## Quick Example
+
+```typescript
+import * as RTE from "@oofp/core/reader-task-either";
+import * as E from "@oofp/core/either";
+import { pipe } from "@oofp/core/pipe";
+
+interface AppContext {
+  db: Database;
+  logger: Logger;
+}
+
+const findUser = (id: string) =>
+  pipe(
+    RTE.ask<AppContext>(),
+    RTE.chaint((ctx) => ctx.db.findUser(id)),
+    RTE.tapRTE((user) => logAccess(user)),
+  );
+
+// Execute at the boundary
+const result = await RTE.run(appContext)(findUser("123"))();
+
+pipe(
+  result,
+  E.fold(
+    (error) => console.error(error),
+    (user) => console.log(user),
+  ),
+);
+```
+
+## Packages
+
+<CardGrid>
+  <LinkCard title="@oofp/core" description="Algebraic data types: Maybe, Either, Task, TaskEither, Reader, RTE, and more." href="/packages/core/" />
+  <LinkCard title="@oofp/http" description="Functional HTTP client built on ReaderTaskEither." href="/packages/http/" />
+  <LinkCard title="@oofp/query" description="Functional query cache with TTL and invalidation." href="/packages/query/" />
+  <LinkCard title="@oofp/saga" description="Saga pattern for transactional workflows with compensation." href="/packages/saga/" />
+  <LinkCard title="@oofp/react" description="React hooks for functional patterns (experimental)." href="/packages/react/" />
+</CardGrid>

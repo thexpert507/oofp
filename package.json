@@ -12,10 +12,13 @@
 		"format": "biome format --write .",
 		"changeset": "changeset",
 		"version": "changeset version",
-		"publish": "pnpm build && changeset publish"
+		"publish": "pnpm build && changeset publish",
+		"docs:dev": "pnpm --filter @oofp/docs run dev",
+		"docs:build": "pnpm --filter @oofp/docs run build",
+		"docs:preview": "pnpm --filter @oofp/docs run preview"
 	},
 	"pnpm": {
-		"onlyBuiltDependencies": ["@biomejs/biome", "esbuild"]
+		"onlyBuiltDependencies": ["@biomejs/biome", "esbuild", "sharp"]
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",

@@ -6,6 +6,7 @@ yalc.lock
 # Build
 dist/
 coverage/
+.astro/
 
 # IDE
 .idea/
