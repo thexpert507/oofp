@@ -1,9 +1,10 @@
 ---
-title: OOFP — Functional Programming for TypeScript
-description: Type-safe algebraic data types, dependency injection, and composition utilities for building real-world TypeScript applications.
+title: OOFP — Functional TypeScript
+description: Type-safe functional patterns that make code easier to write, review, and trust — whether written by you or your AI.
 template: splash
 hero:
-  tagline: Type-safe algebraic data types, dependency injection, and composition utilities for building real-world TypeScript applications.
+  title: '<span class="hero-gradient">OOFP</span> — Functional TypeScript'
+  tagline: Type-safe functional patterns that make code easier to write, review, and trust — whether written by you or your AI.
   actions:
     - text: Get Started
       link: /getting-started/introduction/
@@ -14,55 +15,248 @@ hero:
       variant: minimal
 ---
 
-import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Card, CardGrid, LinkCard, Tabs, TabItem, LinkButton } from '@astrojs/starlight/components';
 
-## Why OOFP?
+{/* ── Section 2: Install bar + badges ────────────────────────── */}
 
-<CardGrid>
-  <Card title="Type-safe by default" icon="approve-check">
-    Every function, every monad, every composition is fully typed. TypeScript inference works end-to-end with no casts needed.
-  </Card>
-  <Card title="Real-world patterns" icon="rocket">
-    Built for production applications. ReaderTaskEither provides dependency injection, async operations, and error handling in a single type.
-  </Card>
-  <Card title="Zero dependencies" icon="seti:lock">
-    No runtime dependencies. Tree-shakeable modular imports keep your bundle small.
-  </Card>
-  <Card title="Composable" icon="puzzle">
-    Everything composes with `pipe` and `flow`. Build complex workflows from simple, reusable functions.
-  </Card>
-</CardGrid>
+<div class="install-section">
+  <div class="install-bar"><span class="prompt">$</span><span>npm install @oofp/core</span></div>
+  <div class="badge-strip">
+    <img src="https://img.shields.io/npm/v/@oofp/core?color=blue&label=npm" alt="npm version" />
+    <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
+    <img src="https://img.shields.io/badge/TypeScript-5.0+-blue?logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/tree--shakeable-yes-brightgreen" alt="Tree-shakeable" />
+  </div>
+</div>
 
-## Quick Example
+{/* ── Section 3: Before/After code comparison ────────────────── */}
 
-```typescript
-import * as RTE from "@oofp/core/reader-task-either";
-import * as E from "@oofp/core/either";
-import { pipe } from "@oofp/core/pipe";
+<div class="comparison-section">
 
-interface AppContext {
-  db: Database;
-  logger: Logger;
-}
+## Why Functional?
 
-const findUser = (id: string) =>
-  pipe(
-    RTE.ask<AppContext>(),
-    RTE.chaint((ctx) => ctx.db.findUser(id)),
-    RTE.tapRTE((user) => logAccess(user)),
-  );
+Functional patterns replace fragile imperative code with predictable, composable pipelines. The types tell you everything — what can fail, what dependencies are needed, and what the output will be.
 
-// Execute at the boundary
-const result = await RTE.run(appContext)(findUser("123"))();
+### Error Handling
 
-pipe(
-  result,
-  E.fold(
-    (error) => console.error(error),
-    (user) => console.log(user),
-  ),
-);
-```
+<Tabs>
+  <TabItem label="Traditional">
+    ```typescript
+    async function getUser(id: string) {
+      try {
+        const response = await fetch(`/api/users/${id}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        try {
+          return validateUser(data);
+        } catch (e) {
+          throw new Error(`Validation failed: ${e}`);
+        }
+      } catch (e) {
+        // What type is e? Who knows.
+        // Did we handle all cases? Maybe.
+        console.error("Something went wrong", e);
+        return null; // Now callers need null checks everywhere
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="With OOFP">
+    ```typescript
+    const getUser = (id: string) =>
+      pipe(
+        TE.tryCatch(() => fetch(`/api/users/${id}`)),
+        TE.chain((res) =>
+          res.ok
+            ? TE.tryCatch(() => res.json())
+            : TE.left(HttpError.fromStatus(res.status))
+        ),
+        TE.chain(validateUser),
+        // Error type is explicit: HttpError | ValidationError
+        // No null. No thrown exceptions. No guessing.
+      );
+    ```
+  </TabItem>
+</Tabs>
+
+### Dependency Injection
+
+<Tabs>
+  <TabItem label="Traditional">
+    ```typescript
+    // Pass dependencies through every function call...
+    async function createOrder(
+      db: Database, logger: Logger, mailer: Mailer,
+      cache: Cache, userId: string, items: Item[]
+    ) {
+      logger.info("Creating order");
+      const user = await db.findUser(userId);
+      const order = await db.createOrder(user, items);
+      await mailer.send(user.email, orderConfirmation(order));
+      await cache.invalidate(`user:${userId}:orders`);
+      return order;
+    }
+    // 6 parameters. Every caller needs all dependencies.
+    // Testing means mocking everything manually.
+    ```
+  </TabItem>
+  <TabItem label="With OOFP">
+    ```typescript
+    interface OrderCtx {
+      db: Database; logger: Logger;
+      mailer: Mailer; cache: Cache;
+    }
+
+    const createOrder = (userId: string, items: Item[]) =>
+      pipe(
+        RTE.ask<OrderCtx>(),
+        RTE.tapRTE((ctx) => ctx.logger.info("Creating order")),
+        RTE.chaint((ctx) => ctx.db.findUser(userId)),
+        RTE.chaint((user) => createAndNotify(user, items)),
+      );
+    // Dependencies injected once at the boundary.
+    // Each function only declares what it needs.
+    ```
+  </TabItem>
+</Tabs>
+
+</div>
+
+{/* ── Section 4: Feature sections with code ──────────────────── */}
+
+<div class="feature-section">
+  <div class="feature-text">
+    <span class="feature-label">Error Handling</span>
+
+### Type-safe errors with Either & TaskEither
+
+Errors are values, not exceptions. `Either<E, A>` encodes success and failure in the type system, so the compiler ensures you handle every case. `TaskEither` extends this to async operations.
+
+No `try/catch` guessing. No `unknown` error types. The signature tells you exactly what can go wrong.
+  </div>
+  <div class="feature-code">
+    ```typescript
+    import * as TE from "@oofp/core/task-either";
+    import * as E from "@oofp/core/either";
+    import { pipe } from "@oofp/core/pipe";
+
+    const data = await pipe(
+      TE.tryCatch(() => fetchData(url)),
+      TE.chain(parseResponse),
+      TE.map(transform),
+      TE.toPromise,
+    );
+    // Rejects on Left, resolves on Right.
+    // Error type is always explicit: HttpError | ParseError
+    ```
+  </div>
+</div>
+
+<div class="feature-section reverse">
+  <div class="feature-text">
+    <span class="feature-label">Dependency Injection</span>
+
+### Built-in DI with ReaderTaskEither
+
+`ReaderTaskEither<R, E, A>` combines dependency injection, async execution, and typed errors in a single composable type. Define your dependencies as interfaces, inject them once at the application boundary.
+
+No DI containers. No decorators. No runtime magic. Just types and functions.
+  </div>
+  <div class="feature-code">
+    ```typescript
+    import * as RTE from "@oofp/core/reader-task-either";
+    import * as TE from "@oofp/core/task-either";
+
+    interface AppCtx { db: Database; logger: Logger }
+
+    const findUser = (id: string) =>
+      pipe(
+        RTE.ask<AppCtx>(),
+        RTE.chaint((ctx) => ctx.db.findUser(id)),
+        RTE.map(toUserDTO),
+      );
+
+    // Inject dependencies at the boundary
+    const user = await pipe(
+      findUser("123"),
+      RTE.run({ db, logger }),
+      TE.toPromise,
+    );
+    ```
+  </div>
+</div>
+
+<div class="feature-section">
+  <div class="feature-text">
+    <span class="feature-label">Composition</span>
+
+### Composable by design with pipe & flow
+
+`pipe` pushes a value through a chain of functions. `flow` creates a new function from a chain without needing an initial value. Everything in OOFP is built to compose — monads, utilities, transformers.
+
+Small functions, clear data flow, easy to read top-to-bottom.
+  </div>
+  <div class="feature-code">
+    ```typescript
+    import { pipe } from "@oofp/core/pipe";
+    import { flow } from "@oofp/core/flow";
+    import * as L from "@oofp/core/list";
+    import * as M from "@oofp/core/maybe";
+
+    // pipe: transform a value step by step
+    const emails = pipe(
+      users,
+      L.filter((u) => u.active),
+      L.map((u) => u.email),
+      L.take(5),
+    );
+
+    // flow: create reusable pipelines
+    const getActiveEmails = flow(
+      L.filter((u: User) => u.active),
+      L.map((u) => u.email),
+    );
+
+    // Maybe: safe access without null
+    const name = pipe(
+      M.fromNullable(user.nickname),
+      M.map((n) => n.toUpperCase()),
+      M.getOrElse("Anonymous"),
+    );
+    ```
+  </div>
+</div>
+
+{/* ── Section 5: Built for the AI era ────────────────────────── */}
+
+<div class="ai-section">
+
+## Built for the AI era
+
+Functional code is not just better for humans — it is structurally easier for AI tools to generate, and for you to verify.
+
+<div class="ai-grid">
+  <div class="ai-card">
+    <h3><span class="ai-icon">&#128269;</span> Easier to review</h3>
+    <p>Functional pipelines read top to bottom. Each step does one thing. When an AI generates a <code>pipe</code> chain, you can verify each transformation independently — no hidden control flow to trace.</p>
+  </div>
+  <div class="ai-card">
+    <h3><span class="ai-icon">&#128737;</span> Less room for bugs</h3>
+    <p>Error handling and null safety are encoded in types, not in discipline. The compiler catches what code review misses — whether the code was written by you or by a language model.</p>
+  </div>
+  <div class="ai-card">
+    <h3><span class="ai-icon">&#129521;</span> You architect, AI implements</h3>
+    <p>Define your types, interfaces, and pipeline structure. Let AI tools fill in the transformations. The type system ensures the pieces fit together correctly.</p>
+  </div>
+</div>
+
+</div>
+
+{/* ── Section 6: Packages ────────────────────────────────────── */}
+
+<div class="packages-section">
 
 ## Packages
 
@@ -73,3 +267,19 @@ pipe(
   <LinkCard title="@oofp/saga" description="Saga pattern for transactional workflows with compensation." href="/packages/saga/" />
   <LinkCard title="@oofp/react" description="React hooks for functional patterns (experimental)." href="/packages/react/" />
 </CardGrid>
+
+</div>
+
+{/* ── Section 7: Footer CTA ──────────────────────────────────── */}
+
+<div class="footer-cta">
+
+## Ready to start?
+
+Install `@oofp/core` and follow the quick start guide to build your first functional pipeline in under 5 minutes.
+
+<LinkButton href="/getting-started/installation/" variant="primary" icon="right-arrow">
+  Installation Guide
+</LinkButton>
+
+</div>

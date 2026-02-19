@@ -1,0 +1,18 @@
+{
+	"name": "@oofp/benchmarks",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Comparative benchmarks: @oofp/core vs fp-ts, Effect, neverthrow, purify-ts, OOP, imperative",
+	"type": "module",
+	"scripts": {
+		"bench": "vitest bench",
+		"type-check": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@oofp/core": "workspace:*",
+		"effect": "^3.12.7",
+		"fp-ts": "^2.16.9",
+		"neverthrow": "^8.2.0",
+		"purify-ts": "^2.1.0"
+	}
+}

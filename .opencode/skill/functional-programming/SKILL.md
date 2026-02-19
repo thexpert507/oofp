@@ -744,14 +744,14 @@ export const getEnrichedEntityUseCase = (id: string) =>
 | Method | Type Class | Execution | Use Case |
 |--------|-----------|-----------|----------|
 | `apply` | **Applicative** | Independent operations | Combining 2-3 related values |
-| `sequenceObject` | **Applicative** | Sequential (monad laws) | Validation, combining into object |
+| `sequenceObject` | **Monad** | Sequential (via chain) | Validation, combining into object |
 | `sequence` | **Monad** | Sequential (one after another) | Operations must run in order |
-| `concurrency` | **Monad** (with parallelism) | Parallel with limit | I/O-bound operations (API calls) |
+| `concurrency` | **Monad** (with parallelism) | Parallel with limit (uses apply/Promise.all per batch) | I/O-bound operations (API calls) |
 
 **Performance Note**:
-- `apply` with RTE: Operations CAN run in parallel (depends on implementation)
-- `sequenceObject`: Uses `apply` internally, follows Applicative laws
-- For heavy I/O: prefer `concurrency` with explicit parallelism
+- `apply` with TE/RTE: Operations run in parallel (via `Promise.all`)
+- `sequence` / `sequenceObject`: Use `chain` internally — always sequential, even for TaskEither
+- For parallel I/O: use `concurrency` (parallel via `apply` within batches) or `apply` directly
 
 ### 6.9 Implementation Pattern: `sequenceObjectT`
 
@@ -768,23 +768,24 @@ export const sequenceObjectT =
       L.reduce(initial, (acc, [key, curr]) => {
         const merge = (result: unknown) => (values: InferredObject) =>
           ({ ...values, [key]: result })
-        return pipe(acc, mo.apply(pipe(curr, mo.map(merge))))  // ← Uses apply!
+        return pipe(acc, mo.chain((values) => pipe(curr, mo.map((result) => merge(result)(values)))))  // ← Uses chain (sequential)
       }),
     )
   }
 ```
 
-**Key insight**: `sequenceObject` uses `apply` internally to combine values.
+**Key insight**: `sequenceObject` uses `chain` internally — execution is always sequential. For parallel execution, use `concurrency` or `concurrencyObject` (which use `apply`/`Promise.all` per batch).
 
 ### 6.10 Rules of Gold
 
 | Rule | Explanation |
 |------|-------------|
-| **Independent → Applicative** | If operations don't depend on each other's results, use `apply` or `sequenceObject` |
+| **Independent + parallel → concurrency** | If operations don't depend on each other and should run in parallel, use `concurrency` / `concurrencyObject` |
+| **Independent + sequential → sequence** | If operations don't depend on each other but must run sequentially, use `sequence` / `sequenceObject` |
 | **Dependent → Monad** | If operation B needs result of A, use `chain` |
-| **Validation → sequenceObject** | Collect all errors from independent validations |
+| **Validation → sequenceObject** | Collect all errors from independent validations (sequential) |
 | **liftA2 for binary ops** | Use when applying function `(a, b) → c` to wrapped values |
-| **RTE.apply for parallel** | Use with ReaderTaskEither for context-based parallel operations |
+| **apply for parallel pairs** | Use `apply` directly for combining 2-3 values in parallel (uses Promise.all for TE/RTE) |
 
 ---
 

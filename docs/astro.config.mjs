@@ -2,6 +2,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightBlog from "starlight-blog";
+import starlightThemeBlack from "starlight-theme-black";
 import sitemap from "@astrojs/sitemap";
 
 // https://astro.build/config
@@ -24,10 +25,15 @@ export default defineConfig({
         dark: "./src/assets/logo-dark.svg",
         replacesTitle: false,
       },
+      customCss: ["./src/styles/custom.css"],
       editLink: {
         baseUrl: "https://github.com/thexpert507/oofp/edit/main/docs/",
       },
       head: [
+        {
+          tag: "script",
+          content: `if (!localStorage.getItem('starlight-theme')) { localStorage.setItem('starlight-theme', 'dark'); }`,
+        },
         {
           tag: "meta",
           attrs: {
@@ -44,6 +50,13 @@ export default defineConfig({
         },
       ],
       plugins: [
+        starlightThemeBlack({
+          navLinks: [
+            { label: "Docs", link: "/getting-started/introduction/" },
+            { label: "Blog", link: "/blog/" },
+          ],
+          footerText: "Built with [Astro](https://astro.build) & [Starlight](https://starlight.astro.build). MIT License.",
+        }),
         starlightBlog({
           title: "Blog",
           authors: {
@@ -129,6 +142,12 @@ export default defineConfig({
             { label: "Object", slug: "utilities/object" },
             { label: "String", slug: "utilities/string" },
             { label: "Curry, Memo & Id", slug: "utilities/curry-memo-id" },
+          ],
+        },
+        {
+          label: "Reference",
+          items: [
+            { label: "Benchmarks", slug: "reference/benchmarks" },
           ],
         },
       ],

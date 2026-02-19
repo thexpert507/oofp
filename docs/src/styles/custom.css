@@ -1,0 +1,282 @@
+/* ============================================================
+   OOFP Landing Page — Custom Styles
+   Compatible with starlight-theme-black
+   ============================================================ */
+
+/* ------------------------------------------------------------------
+   0. Container constraints for splash page sections
+   The splash template renders content without the theme's
+   ContainerSection wrapper, so we add our own max-width + padding
+   to match the theme's container behavior.
+   ------------------------------------------------------------------ */
+
+.install-section,
+.comparison-section,
+.feature-section,
+.ai-section,
+.packages-section,
+.footer-cta {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 80rem) {
+  .install-section,
+  .comparison-section,
+  .feature-section,
+  .ai-section,
+  .packages-section,
+  .footer-cta {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* ------------------------------------------------------------------
+   1. Hero — Animated gradient title
+   ------------------------------------------------------------------ */
+
+.hero-gradient {
+  background: linear-gradient(135deg, #3b82f6, #7c3aed, #3b82f6);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 6s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ------------------------------------------------------------------
+   2. Install bar + badges
+   ------------------------------------------------------------------ */
+
+.install-section {
+  text-align: center;
+  padding-top: 2rem;
+  padding-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.install-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 1.2rem;
+  font-family: var(--sl-font-mono);
+  font-size: 0.95rem;
+  color: var(--foreground);
+  user-select: all;
+  cursor: text;
+}
+
+.install-bar .prompt {
+  color: var(--muted-foreground);
+  user-select: none;
+}
+
+.badge-strip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.badge-strip img {
+  height: 22px;
+  display: block;
+}
+
+/* ------------------------------------------------------------------
+   3. Before/After code comparison section
+   ------------------------------------------------------------------ */
+
+.comparison-section {
+  max-width: 52rem;
+  padding-top: 2.5rem;
+  padding-bottom: 1rem;
+}
+
+.comparison-section h2 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.comparison-section > p {
+  text-align: center;
+  color: var(--muted-foreground);
+  margin-bottom: 1.5rem;
+}
+
+.comparison-section h3 {
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------
+   4. Feature sections — alternating text + code layout
+   ------------------------------------------------------------------ */
+
+.feature-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: start;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 50rem) {
+  .feature-section {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+
+  .feature-section.reverse .feature-text {
+    order: 2;
+  }
+
+  .feature-section.reverse .feature-code {
+    order: 1;
+  }
+}
+
+.feature-text h3 {
+  margin-top: 0;
+  font-size: 1.35rem;
+}
+
+.feature-text p {
+  color: var(--muted-foreground);
+  line-height: 1.7;
+}
+
+.feature-label {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #7c3aed;
+  margin-bottom: 0.5rem;
+}
+
+:root[data-theme='light'] .feature-label {
+  color: #6d28d9;
+}
+
+/* ------------------------------------------------------------------
+   5. "Built for the AI era" section
+   ------------------------------------------------------------------ */
+
+.ai-section {
+  padding-top: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.ai-section h2 {
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.ai-section > p {
+  text-align: center;
+  color: var(--muted-foreground);
+  margin-bottom: 2rem;
+}
+
+.ai-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 50rem) {
+  .ai-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.ai-card {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ai-card h3 {
+  margin-top: 0;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ai-card p {
+  color: var(--muted-foreground);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 0;
+  flex-grow: 1;
+}
+
+.ai-icon {
+  font-size: 1.3rem;
+}
+
+/* ------------------------------------------------------------------
+   6. Packages section
+   ------------------------------------------------------------------ */
+
+.packages-section {
+  padding-top: 2rem;
+  padding-bottom: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.packages-section h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* ------------------------------------------------------------------
+   7. Footer CTA
+   ------------------------------------------------------------------ */
+
+.footer-cta {
+  text-align: center;
+  padding-top: 2.5rem;
+  padding-bottom: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.footer-cta h2 {
+  margin-bottom: 0.5rem;
+}
+
+.footer-cta p {
+  color: var(--muted-foreground);
+  margin-bottom: 1.5rem;
+}

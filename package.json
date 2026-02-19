@@ -10,6 +10,7 @@
 		"type-check": "pnpm -r --filter './packages/*' run type-check",
 		"lint": "biome check .",
 		"format": "biome format --write .",
+		"bench": "pnpm -r --filter './packages/*' run bench",
 		"changeset": "changeset",
 		"version": "changeset version",
 		"publish": "pnpm build && changeset publish",
