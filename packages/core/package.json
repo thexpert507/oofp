@@ -74,7 +74,9 @@
 			"require": "./dist/cjs/flow.cjs"
 		},
 		"./function": {
-			"types": "./dist/function.d.ts"
+			"types": "./dist/function.d.ts",
+			"import": "./dist/es/function.js",
+			"require": "./dist/cjs/function.cjs"
 		},
 		"./functor": {
 			"types": "./dist/functor.d.ts"

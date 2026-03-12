@@ -1,6 +1,6 @@
+import { resolve } from "node:path";
 /// <reference types="vitest" />
 import { defineConfig } from "vite";
-import { resolve } from "node:path";
 import dts from "vite-plugin-dts";
 
 export default defineConfig({
@@ -12,6 +12,7 @@ export default defineConfig({
 				utils: resolve(__dirname, "lib/utils/index.ts"),
 				["bi-compose"]: resolve(__dirname, "lib/bi-compose.ts"),
 				compose: resolve(__dirname, "lib/compose.ts"),
+				function: resolve(__dirname, "lib/function.ts"),
 				curry: resolve(__dirname, "lib/curry.ts"),
 				either: resolve(__dirname, "lib/either.ts"),
 				flow: resolve(__dirname, "lib/flow.ts"),
