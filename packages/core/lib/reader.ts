@@ -86,9 +86,9 @@ export const run =
 		ra(r);
 
 export const apply =
-	<R, A, B>(rfa: Reader<R, Fn<A, B>>) =>
-	(ra: Reader<R, A>): Reader<R, B> =>
-	(r: R) =>
+	<R2, A, B>(rfa: Reader<R2, Fn<A, B>>) =>
+	<R1>(ra: Reader<R1, A>): Reader<R1 & R2, B> =>
+	(r: R1 & R2) =>
 		pipe(rfa(r), (fa) => pipe(ra(r), (a) => fa(a)));
 
 interface RF extends Monad2<URI>, ProFunctor<URI>, Applicative2<URI> {}
