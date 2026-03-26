@@ -1,7 +1,7 @@
 {
 	"name": "@oofp/focal",
 	"version": "0.1.0",
-	"description": "Composable optics and mutable references for TypeScript — pipe/flow friendly, zero FP jargon",
+	"description": "Composable optics for TypeScript — Lens, Prism, Traversal and Iso, pipe/flow friendly",
 	"license": "MIT",
 	"author": "thexpert507",
 	"repository": {
@@ -15,8 +15,9 @@
 		"fp",
 		"optics",
 		"lens",
-		"ref",
-		"mutable-state",
+		"prism",
+		"traversal",
+		"iso",
 		"pipe",
 		"composable"
 	],
@@ -30,9 +31,30 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/es/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./lens": {
+			"types": "./dist/lens.d.ts",
+			"import": "./dist/es/lens.js",
+			"require": "./dist/cjs/lens.cjs"
+		},
+		"./prism": {
+			"types": "./dist/prism.d.ts",
+			"import": "./dist/es/prism.js",
+			"require": "./dist/cjs/prism.cjs"
+		},
+		"./traversal": {
+			"types": "./dist/traversal.d.ts",
+			"import": "./dist/es/traversal.js",
+			"require": "./dist/cjs/traversal.cjs"
+		},
+		"./iso": {
+			"types": "./dist/iso.d.ts",
+			"import": "./dist/es/iso.js",
+			"require": "./dist/cjs/iso.cjs"
 		}
 	},
 	"scripts": {
+		"prepublish": "pnpm run build",
 		"build": "tsc -p ./tsconfig.build.json && vite build",
 		"test": "vitest run",
 		"test:watch": "vitest --watch",
