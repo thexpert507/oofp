@@ -1,0 +1,48 @@
+{
+	"name": "@oofp/focal",
+	"version": "0.1.0",
+	"description": "Composable optics and mutable references for TypeScript — pipe/flow friendly, zero FP jargon",
+	"license": "MIT",
+	"author": "thexpert507",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/thexpert507/oofp.git",
+		"directory": "packages/focal"
+	},
+	"keywords": [
+		"functional-programming",
+		"typescript",
+		"fp",
+		"optics",
+		"lens",
+		"ref",
+		"mutable-state",
+		"pipe",
+		"composable"
+	],
+	"type": "module",
+	"files": ["dist"],
+	"publishConfig": {
+		"access": "public"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/es/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"scripts": {
+		"build": "tsc -p ./tsconfig.build.json && vite build",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
+		"type-check": "tsc --noEmit",
+		"coverage": "vitest run --coverage"
+	},
+	"peerDependencies": {
+		"@oofp/core": "workspace:*"
+	},
+	"devDependencies": {
+		"@oofp/core": "workspace:*"
+	}
+}

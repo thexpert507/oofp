@@ -77,6 +77,12 @@ importers:
 
   packages/core: {}
 
+  packages/focal:
+    devDependencies:
+      '@oofp/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/http:
     devDependencies:
       '@oofp/core':

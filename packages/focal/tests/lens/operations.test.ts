@@ -1,0 +1,63 @@
+import { describe, it, expect } from "vitest";
+import { pipe } from "@oofp/core/pipe";
+import { prop, identity, view, set, over } from "../../lib/lens.ts";
+import { type Company, type Person, alice, acme } from "./fixtures.ts";
+
+describe("view / set / over", () => {
+	const ageLens = pipe(identity<Person>(), prop("age"));
+
+	it("view — extracts the focus, works with pipe", () => {
+		const result = pipe(ageLens, view(alice));
+		expect(result).toBe(30);
+	});
+
+	it("set — replaces the focus, works with pipe", () => {
+		const result = pipe(ageLens, set(31))(alice);
+		expect(result.age).toBe(31);
+	});
+
+	it("over — maps a function over the focus, works with pipe", () => {
+		const result = pipe(
+			ageLens,
+			over((n) => n + 1),
+		)(alice);
+		expect(result.age).toBe(31);
+	});
+
+	it("over with identity function changes nothing (sanity check)", () => {
+		const result = pipe(
+			ageLens,
+			over((n) => n),
+		)(alice);
+		expect(result).toEqual(alice);
+	});
+});
+
+describe("Deep nesting — Company → CEO → Address → Street", () => {
+	const ceoStreetLens = pipe(
+		identity<Company>(),
+		prop("ceo"),
+		prop("address"),
+		prop("street"),
+	);
+
+	it("reads 3 levels deep", () => {
+		expect(ceoStreetLens.get(acme)).toBe("123 Main St");
+	});
+
+	it("writes 3 levels deep immutably", () => {
+		const updated = pipe(ceoStreetLens, set("1 Infinite Loop"))(acme);
+		expect(updated.ceo.address.street).toBe("1 Infinite Loop");
+		expect(updated.name).toBe("Acme Corp");
+		expect(updated.ceo.name).toBe("Alice");
+		expect(acme.ceo.address.street).toBe("123 Main St");
+	});
+
+	it("over modifies 3 levels deep", () => {
+		const result = pipe(
+			ceoStreetLens,
+			over((s) => s.toUpperCase()),
+		)(acme);
+		expect(result.ceo.address.street).toBe("123 MAIN ST");
+	});
+});

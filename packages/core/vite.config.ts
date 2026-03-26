@@ -31,6 +31,7 @@ export default defineConfig({
 				["task-either"]: resolve(__dirname, "lib/task-either.ts"),
 				task: resolve(__dirname, "lib/task.ts"),
 				io: resolve(__dirname, "lib/io.ts"),
+				ref: resolve(__dirname, "lib/ref.ts"),
 			},
 			name: "fp",
 			formats: ["es", "cjs"],

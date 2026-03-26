@@ -1,0 +1,36 @@
+import { describe, it, expect } from "vitest";
+import { pipe } from "@oofp/core/pipe";
+import { view, review, over } from "../../lib/iso.ts";
+import { celsiusToFahrenheit, stringToChars } from "./fixtures.ts";
+
+describe("view / review / over (pipe-friendly)", () => {
+	it("view applies the forward direction", () => {
+		const result = pipe(celsiusToFahrenheit, view(100));
+		expect(result).toBe(212);
+	});
+
+	it("review applies the backward direction", () => {
+		const result = pipe(celsiusToFahrenheit, review(212));
+		expect(result).toBe(100);
+	});
+
+	it("over transforms in B-space and maps back to A-space", () => {
+		// Double the Fahrenheit value, return as Celsius
+		const result = pipe(celsiusToFahrenheit, over((f: number) => f * 2))(100);
+		// 100C = 212F → 424F = (424 - 32) * 5/9 ≈ 217.78C
+		expect(result).toBeCloseTo((424 - 32) * 5 / 9);
+	});
+
+	it("over with identity function changes nothing", () => {
+		const result = pipe(stringToChars, over((chars: string[]) => chars))("hello");
+		expect(result).toBe("hello");
+	});
+
+	it("over can manipulate chars and get back a string", () => {
+		const result = pipe(
+			stringToChars,
+			over((chars: string[]) => chars.map((c) => c.toUpperCase())),
+		)("hello");
+		expect(result).toBe("HELLO");
+	});
+});
