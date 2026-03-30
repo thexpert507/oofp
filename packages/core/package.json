@@ -24,7 +24,9 @@
 		"type-safe"
 	],
 	"type": "module",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"publishConfig": {
 		"access": "public"
 	},
@@ -181,6 +183,7 @@
 		}
 	},
 	"scripts": {
+		"prepublish": "pnpm run build",
 		"build": "tsc -p ./tsconfig.build.json && vite build",
 		"test": "vitest run",
 		"test:watch": "vitest --watch",

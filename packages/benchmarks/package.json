@@ -10,6 +10,7 @@
 	},
 	"devDependencies": {
 		"@oofp/core": "workspace:*",
+		"@oofp/focal": "workspace:*",
 		"effect": "^3.12.7",
 		"fp-ts": "^2.16.9",
 		"neverthrow": "^8.2.0",

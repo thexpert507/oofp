@@ -62,6 +62,9 @@ importers:
       '@oofp/core':
         specifier: workspace:*
         version: link:../core
+      '@oofp/focal':
+        specifier: workspace:*
+        version: link:../focal
       effect:
         specifier: ^3.12.7
         version: 3.19.18

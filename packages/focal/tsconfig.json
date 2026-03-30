@@ -1,17 +1,18 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
-		"lib": ["ES2020"],
+		"lib": [
+			"ES2020"
+		],
 		"allowImportingTsExtensions": true,
 		"paths": {
-			"@/*": ["../core/lib/*"],
-			"@oofp/core/io": ["../core/lib/io.ts"],
-			"@oofp/core/maybe": ["../core/lib/maybe.ts"],
-			"@oofp/core/either": ["../core/lib/either.ts"],
-			"@oofp/core/pipe": ["../core/lib/pipe.ts"],
-			"@oofp/core/flow": ["../core/lib/flow.ts"],
-			"@oofp/core/function": ["../core/lib/function.ts"]
+			"@/*": [
+				"./lib/*"
+			],
 		}
 	},
-	"include": ["lib", "tests"]
+	"include": [
+		"lib",
+		"tests"
+	]
 }

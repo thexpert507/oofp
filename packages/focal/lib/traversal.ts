@@ -155,9 +155,10 @@ export function compose<A, B>(
 		}
 		if (to.tag === "Prism") {
 			const prism = to as Prism<A, B>;
+			const cachedModify = prismModify(prism);
 			return {
 				tag: "Traversal" as const,
-				modify: (f: (b: B) => B) => from.modify(prismModify(prism)(f)),
+				modify: (f: (b: B) => B) => from.modify(cachedModify(f)),
 				toArray: (s: S) => {
 					const result: B[] = [];
 					for (const a of from.toArray(s)) {

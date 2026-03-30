@@ -3,7 +3,20 @@
 	"compilerOptions": {
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
-		"allowImportingTsExtensions": true
+		"allowImportingTsExtensions": true,
+		"paths": {
+			"@/*": ["../core/lib/*"],
+			"@oofp/focal/lens": ["../focal/lib/lens.ts"],
+			"@oofp/focal/prism": ["../focal/lib/prism.ts"],
+			"@oofp/focal/traversal": ["../focal/lib/traversal.ts"],
+			"@oofp/focal/iso": ["../focal/lib/iso.ts"],
+			"@oofp/focal": ["../focal/lib/index.ts"],
+			"@oofp/core/pipe": ["../core/lib/pipe.ts"],
+			"@oofp/core/maybe": ["../core/lib/maybe.ts"],
+			"@oofp/core/either": ["../core/lib/either.ts"],
+			"@oofp/core/task": ["../core/lib/task.ts"],
+			"@oofp/core/task-either": ["../core/lib/task-either.ts"]
+		}
 	},
-	"include": ["comparison"]
+	"include": ["comparison", "vite.config.ts"]
 }

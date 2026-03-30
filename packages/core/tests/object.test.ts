@@ -3,9 +3,9 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import { pipe } from "@/pipe";
 import * as O from "@/object";
-import { describe, it, expect } from "vitest";
+import { pipe } from "@/pipe";
+import { describe, expect, it } from "vitest";
 
 describe("Object", () => {
 	describe("mapValues", () => {
@@ -553,6 +553,32 @@ describe("Object", () => {
 				),
 			);
 			expect(result).toEqual({ fruit: "banana" });
+		});
+	});
+
+	describe("lookup", () => {
+		it("should return Just when key exists", () => {
+			const index = { alice: 30, bob: 25 };
+			const result = pipe(index, O.lookup("alice"));
+			expect(result).toEqual({ kind: "Just", value: 30 });
+		});
+
+		it("should return Nothing when key is missing", () => {
+			const index = { alice: 30, bob: 25 };
+			const result = pipe(index, O.lookup("carol" as "alice" | "bob"));
+			expect(result).toEqual({ kind: "Nothing" });
+		});
+
+		it("should work with object values", () => {
+			const profiles = { u1: { name: "Alice" }, u2: { name: "Bob" } };
+			const result = pipe(profiles, O.lookup("u1"));
+			expect(result).toEqual({ kind: "Just", value: { name: "Alice" } });
+		});
+
+		it("should return Nothing on empty object", () => {
+			const empty: Partial<Record<"x", number>> = {};
+			const result = pipe(empty, O.lookup("x"));
+			expect(result).toEqual({ kind: "Nothing" });
 		});
 	});
 });

@@ -4,6 +4,8 @@
  */
 
 import { Fn } from "./function";
+import type { Maybe } from "./maybe";
+import * as M from "./maybe";
 import type { Simplify } from "./utils/simplify";
 
 /**
@@ -259,3 +261,19 @@ export const fromArray =
 		}
 		return result;
 	};
+
+/**
+ * Lookup tipado sobre un Record parcial — devuelve Maybe<V>.
+ * A diferencia de `get` (que asume que la key existe) o `getOr` (que requiere un default),
+ * `lookup` modela explícitamente la ausencia como `Nothing`.
+ *
+ * ```ts
+ * const index = { alice: { age: 30 }, bob: { age: 25 } };
+ * pipe(index, O.lookup("alice")) // => Just({ age: 30 })
+ * pipe(index, O.lookup("carol")) // => Nothing
+ * ```
+ */
+export const lookup =
+	<K extends string>(key: K) =>
+	<V>(obj: Partial<Record<K, V>>): Maybe<V> =>
+		M.fromNullable(obj[key] as V | undefined);
