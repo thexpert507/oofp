@@ -65,6 +65,7 @@ const result: Either<HttpError | ValidationError, string> =
 | Package | Version | Description |
 |---------|---------|-------------|
 | [`@oofp/core`](./packages/core) | [![npm](https://img.shields.io/npm/v/@oofp/core.svg?style=flat)](https://www.npmjs.com/package/@oofp/core) | Foundation -- Maybe, Either, Task, TaskEither, Reader, RTE, State, IO, pipe, flow, compose, curry |
+| [`@oofp/focal`](./packages/focal) | [![npm](https://img.shields.io/npm/v/@oofp/focal.svg?style=flat)](https://www.npmjs.com/package/@oofp/focal) | Composable optics -- Lens, Prism, Traversal, Iso, and the ergonomic Focal API for pipe-friendly immutable updates |
 | [`@oofp/http`](./packages/http) | [![npm](https://img.shields.io/npm/v/@oofp/http.svg?style=flat)](https://www.npmjs.com/package/@oofp/http) | Functional HTTP client with interceptors, retry, timeouts, and structured errors |
 | [`@oofp/query`](./packages/query) | [![npm](https://img.shields.io/npm/v/@oofp/query.svg?style=flat)](https://www.npmjs.com/package/@oofp/query) | Query/cache library with tag-based invalidation, deduplication, and telemetry |
 | [`@oofp/saga`](./packages/saga) | [![npm](https://img.shields.io/npm/v/@oofp/saga.svg?style=flat)](https://www.npmjs.com/package/@oofp/saga) | Saga pattern for distributed transactions with automatic compensations |

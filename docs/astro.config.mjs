@@ -114,6 +114,7 @@ export default defineConfig({
           label: "Packages",
           items: [
             { label: "@oofp/core", slug: "packages/core" },
+            { label: "@oofp/focal", slug: "packages/focal" },
             { label: "@oofp/http", slug: "packages/http" },
             { label: "@oofp/query", slug: "packages/query" },
             { label: "@oofp/saga", slug: "packages/saga" },
