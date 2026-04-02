@@ -11,6 +11,7 @@ export {
 	eachRecord,
 	index,
 	indexRecord,
+	elements,
 	match,
 	filter,
 	modify,

@@ -155,6 +155,13 @@ export const indexRecord =
 		return compose(recPrism)(focal as never) as ComposeResult<Prism.URI, F, S, A>;
 	};
 
+export const elements =
+	() =>
+	<F extends URIS, S, A>(focal: Focal<F, S, A[]>): Focal<Traversal.URI, S, A> => {
+		const eachTraversal = make<Traversal.URI, A[], A>(Traversal.each<A>());
+		return compose(eachTraversal)(focal as never) as Focal<Traversal.URI, S, A>;
+	};
+
 // Overload 1: with explicit type param — curried tagKey then tagValue, enabling partial matchers.
 // The two-step currying ensures TV is fully instantiated before Extract<A, Record<TK, TV>> is
 // evaluated, preventing TypeScript from widening TV to its upper bound when A contains

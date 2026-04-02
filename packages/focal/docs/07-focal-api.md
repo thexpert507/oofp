@@ -311,6 +311,76 @@ pipe(
 // => Just(5)
 ```
 
+Cuando el valor de la clave es un array, se puede encadenar con `index(i)` para acceder a un elemento concreto, o con `elements()` para traversar todos:
+
+```ts
+type Store = Record<string, number[]>;
+const store: Store = { apples: [1, 2, 3], bananas: [4, 5] };
+
+// Elemento concreto — Prism
+pipe(Focal.from<Store>(), Focal.indexRecord("apples"), Focal.index(0), Focal.preview(store));
+// => Just(1)
+
+// Todos los elementos — Traversal
+pipe(
+  Focal.from<Store>(),
+  Focal.indexRecord("apples"),
+  Focal.elements(),
+  Focal.modify((n) => n * 10),
+  Focal.run(store),
+);
+// => { apples: [10, 20, 30], bananas: [4, 5] }
+```
+
+### `elements()` — traversar todos los elementos del array en foco
+
+Cuando el foco actual ya es un array (`A[]`), `elements()` crea un `Traversal` sobre todos sus elementos. A diferencia de `each(key)`, no necesita un nombre de campo — opera directamente sobre el array que está en foco.
+
+```ts
+// Sobre un Lens (from → prop → elements)
+type Bag = { items: string[] };
+const bag: Bag = { items: ["a", "b", "c"] };
+
+pipe(
+  Focal.from<Bag>(),
+  Focal.prop("items"),      // Focal<Lens, Bag, string[]>
+  Focal.elements(),         // Focal<Traversal, Bag, string>
+  Focal.modify((s) => s.toUpperCase()),
+  Focal.run(bag),
+);
+// => { items: ["A", "B", "C"] }
+
+// Sobre un Prism (indexRecord → elements)
+type Store = Record<string, number[]>;
+const store: Store = { apples: [1, 2, 3], bananas: [4, 5] };
+
+pipe(
+  Focal.from<Store>(),
+  Focal.indexRecord("apples"),  // Focal<Prism, Store, number[]>
+  Focal.elements(),             // Focal<Traversal, Store, number>
+  Focal.collect(store),
+);
+// => [1, 2, 3]
+
+// No-op cuando la clave no existe
+pipe(
+  Focal.from<Store>(),
+  Focal.indexRecord("mangoes"),
+  Focal.elements(),
+  Focal.modify((n) => n * 10),
+  Focal.run(store),
+);
+// => { apples: [1, 2, 3], bananas: [4, 5] }  — sin cambios
+```
+
+**Cuándo usar `each(key)` vs `elements()`:**
+
+| | `each(key)` | `elements()` |
+|---|---|---|
+| El array está en una propiedad del foco | `Focal.each("items")` | — |
+| El foco ya es el array | — | `Focal.elements()` |
+| Típicamente después de | `from`, `prop` | `prop`, `indexRecord`, `index` |
+
 ### `match(tagKey, tagValue)` — filtrar por variante de unión discriminada
 
 Navega hasta una variante específica de una unión discriminada. Si el valor es otra variante, las operaciones son no-ops. TypeScript narrowea automáticamente el tipo del foco.
@@ -405,6 +475,9 @@ El tipo del `Focal` resultante se calcula automáticamente según la regla del o
 | `Focal<Traversal, ...>` | `index` | `Focal<Traversal, ...>` |
 | `Focal<Lens, ...>` | `indexRecord` | `Focal<Prism, ...>` |
 | `Focal<Traversal, ...>` | `indexRecord` | `Focal<Traversal, ...>` |
+| `Focal<Lens, ...>` | `elements` | `Focal<Traversal, ...>` |
+| `Focal<Prism, ...>` | `elements` | `Focal<Traversal, ...>` |
+| `Focal<Traversal, ...>` | `elements` | `Focal<Traversal, ...>` |
 | `Focal<Lens, ...>` | `match` | `Focal<Prism, ...>` |
 | `Focal<Traversal, ...>` | `match` | `Focal<Traversal, ...>` |
 | Cualquiera | `filter` | `Focal<Traversal, ...>` |
@@ -678,6 +751,7 @@ Los focals reutilizables (`skillFocal`, `positionFocal`, etc.) se definen una ve
 | | `eachRecord(key)` | Record → Traversal |
 | | `index(i)` | Elemento en posición `i` → Prism |
 | | `indexRecord(key)` | Valor en clave `key` de un `Record<string,V>` → Prism |
+| | `elements()` | Todos los elementos del array en foco → Traversal |
 | | `match(tagKey, tagValue)` | Variante de unión discriminada → Prism/Traversal |
 | | `filter(pred)` | Filtrado condicional → Traversal |
 | | `compose(focal)` | Composición explícita con otro Focal |

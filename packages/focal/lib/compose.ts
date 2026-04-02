@@ -122,12 +122,25 @@ function prismCompose<B, C>(optic: AnyOptic<B, C>): <S>(from: Prism<S, B>) => An
 				return P.make<S, C>(
 					(s) => pipe(from.preview(s), M.chain(optic.preview)),
 					(c) => from.review(optic.review(c)),
+					(f) => (s) => {
+						if (from.modify) return from.modify(P.modify(f)(optic))(s);
+						const mb = from.preview(s);
+						if (M.isNothing(mb)) return s;
+						return from.review(P.modify(f)(optic)(mb.value));
+					},
 				);
 			}
 			case "Traversal": {
 				return T.make<S, C>(
-					(f) => (s) =>
-						pipe(from.preview(s), M.map(optic.modify(f)), M.map(from.review), M.getOrElse(s)),
+					(f) => (s) => {
+						if (from.modify) return from.modify(optic.modify(f))(s);
+						return pipe(
+							from.preview(s),
+							M.map(optic.modify(f)),
+							M.map(from.review),
+							M.getOrElse(s),
+						);
+					},
 					(s) => pipe(from.preview(s), M.map(optic.toArray), M.getOrElse([] as C[])),
 				);
 			}

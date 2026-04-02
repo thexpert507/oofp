@@ -873,6 +873,139 @@ describe("Focal.indexRecord", () => {
 		);
 		expect(result).toEqual(M.just(5));
 	});
+
+	describe("when the record value is an array", () => {
+		type ArrayStore = Record<string, number[]>;
+		const store: ArrayStore = { apples: [1, 2, 3], bananas: [4, 5] };
+
+		it("preview chains: indexRecord → index → Just when both in bounds", () => {
+			const result = pipe(
+				Focal.from<ArrayStore>(),
+				Focal.indexRecord("apples"),
+				Focal.index(0),
+				Focal.preview(store),
+			);
+			expect(result).toEqual(M.just(1));
+		});
+
+		it("preview chains: indexRecord → index → Nothing when key is absent", () => {
+			const result = pipe(
+				Focal.from<ArrayStore>(),
+				Focal.indexRecord("mangoes"),
+				Focal.index(0),
+				Focal.preview(store),
+			);
+			expect(result).toEqual(M.nothing());
+		});
+
+		it("modify chains: indexRecord → index — updates only the targeted element, preserving all other keys and elements", () => {
+			const result = pipe(
+				Focal.from<ArrayStore>(),
+				Focal.indexRecord("apples"),
+				Focal.index(1),
+				Focal.modify((n) => n * 10),
+				Focal.run(store),
+			);
+			expect(result).toEqual({ apples: [1, 20, 3], bananas: [4, 5] });
+		});
+
+		it("set chains: indexRecord → index — replaces only the targeted element, preserving all other keys and elements", () => {
+			const result = pipe(
+				Focal.from<ArrayStore>(),
+				Focal.indexRecord("apples"),
+				Focal.index(0),
+				Focal.set(99),
+				Focal.run(store),
+			);
+			expect(result).toEqual({ apples: [99, 2, 3], bananas: [4, 5] });
+		});
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Focal.elements
+// ---------------------------------------------------------------------------
+
+describe("Focal.elements", () => {
+	it("produces a Traversal focal from a Lens focal over an array", () => {
+		const f = pipe(Focal.from<number[]>(), Focal.elements());
+		expect(f.optic.tag).toBe("Traversal");
+	});
+
+	it("produces a Traversal focal from a Prism focal over an array", () => {
+		const f = pipe(Focal.from<number[][]>(), Focal.index(0), Focal.elements());
+		expect(f.optic.tag).toBe("Traversal");
+	});
+
+	it("collect returns all elements", () => {
+		const result = pipe(Focal.from<number[]>(), Focal.elements(), Focal.collect([1, 2, 3]));
+		expect(result).toEqual([1, 2, 3]);
+	});
+
+	it("modify updates all elements", () => {
+		const result = pipe(
+			Focal.from<number[]>(),
+			Focal.elements(),
+			Focal.modify((n) => n * 2),
+			Focal.run([1, 2, 3]),
+		);
+		expect(result).toEqual([2, 4, 6]);
+	});
+
+	it("chains: indexRecord → elements → collect", () => {
+		type Store = Record<string, number[]>;
+		const store: Store = { apples: [1, 2, 3], bananas: [4, 5] };
+
+		const result = pipe(
+			Focal.from<Store>(),
+			Focal.indexRecord("apples"),
+			Focal.elements(),
+			Focal.collect(store),
+		);
+		expect(result).toEqual([1, 2, 3]);
+	});
+
+	it("chains: indexRecord → elements → modify — updates all elements, preserving other keys", () => {
+		type Store = Record<string, number[]>;
+		const store: Store = { apples: [1, 2, 3], bananas: [4, 5] };
+
+		const result = pipe(
+			Focal.from<Store>(),
+			Focal.indexRecord("apples"),
+			Focal.elements(),
+			Focal.modify((n) => n * 10),
+			Focal.run(store),
+		);
+		expect(result).toEqual({ apples: [10, 20, 30], bananas: [4, 5] });
+	});
+
+	it("chains: indexRecord → elements — is a no-op when key is absent", () => {
+		type Store = Record<string, number[]>;
+		const store: Store = { apples: [1, 2, 3] };
+
+		const result = pipe(
+			Focal.from<Store>(),
+			Focal.indexRecord("mangoes"),
+			Focal.elements(),
+			Focal.modify((n) => n * 10),
+			Focal.run(store),
+		);
+		expect(result).toBe(store);
+	});
+
+	it("chains: prop → elements → modify", () => {
+		type Bag = { items: string[] };
+		const bag: Bag = { items: ["a", "b", "c"] };
+
+		const result = pipe(
+			Focal.from<Bag>(),
+			Focal.prop("items"),
+			Focal.elements(),
+			Focal.modify((s) => s.toUpperCase()),
+			Focal.run(bag),
+		);
+		expect(result).toEqual({ items: ["A", "B", "C"] });
+	});
 });
 
 // ---------------------------------------------------------------------------
