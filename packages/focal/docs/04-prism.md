@@ -178,6 +178,28 @@ pipe(second, Prism.over(n => n * 10))([10, 20, 30]);
 // => [10, 200, 30]  — solo el elemento en index 1 cambió
 ```
 
+### `indexRecord<V>(key: string): Prism<Record<string, V>, V>`
+
+Enfoca el valor asociado a la clave `key` en un `Record<string, V>`. Devuelve `Nothing` si la clave no existe en el record.
+
+```ts
+const atFoo = Prism.indexRecord<number>("foo");
+
+pipe(atFoo, Prism.preview({ foo: 42, bar: 7 })); // => Just(42)
+pipe(atFoo, Prism.preview({ bar: 7 }));           // => Nothing (clave ausente)
+pipe(atFoo, Prism.preview({}));                   // => Nothing
+pipe(atFoo, Prism.review(99));                    // => { foo: 99 }
+```
+
+Al igual que `index`, este Prism incluye un override de `modify` para preservar el resto del record — sin el override, `review(f(preview(s)))` devolvería un record de una sola entrada descartando todas las demás claves:
+
+```ts
+const double = atFoo.modify!(n => n * 2);
+
+double({ foo: 5, bar: 3 });  // => { foo: 10, bar: 3 }  — solo "foo" cambió
+double({ bar: 3 });           // => { bar: 3 }  — no-op, clave ausente
+```
+
 ### `match<S>()(tagKey, tagValue): Prism<S, Variant>` (forma identidad)
 
 Crea un Prism para una variante específica de una **unión discriminada**. El foco es la variante completa (narrowed):
@@ -320,7 +342,7 @@ pipe(composed, Prism.preview(pipe(composed, Prism.review(7))));
 | **Tipo**          | `Prism<S, A>` con `tag`, `preview`, `review`, `modify?` |
 | **Focos**         | 0 o 1 — puede estar ausente                            |
 | **Leyes**         | PreviewReview, ReviewPreview                            |
-| **Constructores** | `make(preview, review)`, `_just`, `_nothing`, `_right`, `_left`, `index`, `match`, `matchWith` |
+| **Constructores** | `make(preview, review)`, `_just`, `_nothing`, `_right`, `_left`, `index`, `indexRecord`, `match`, `matchWith` |
 | **Operaciones**   | `preview`, `review`, `over`, `set`                      |
 | **Composición**   | `compose` (pipe-friendly, overloaded por tag)            |
 | **Helper**        | `prismModify` (exportado, usado por otros módulos)       |

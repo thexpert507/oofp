@@ -10,6 +10,7 @@ export {
 	each,
 	eachRecord,
 	index,
+	indexRecord,
 	match,
 	filter,
 	modify,

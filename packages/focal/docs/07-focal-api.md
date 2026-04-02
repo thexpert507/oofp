@@ -266,6 +266,51 @@ pipe(
 // => Just("Sales")
 ```
 
+### `indexRecord(key)` — acceder al valor de un `Record<string, V>` por clave
+
+Devuelve un `Prism` que apunta al valor asociado a `key` en un `Record<string, V>`. Si la clave no existe en runtime, todas las operaciones son no-ops.
+
+**Diferencia clave con `prop`:** `prop` opera sobre tipos con campos conocidos en tiempo de compilación (garantiza que la clave existe, devuelve un `Lens`). `indexRecord` opera sobre mapas dinámicos `Record<string, V>` donde la clave puede no existir en runtime, por eso devuelve un `Prism`.
+
+```ts
+type Catalog = Record<string, number>;
+const catalog: Catalog = { apples: 10, bananas: 5, cherries: 80 };
+
+// preview — Just cuando la clave existe, Nothing cuando no
+pipe(Focal.from<Catalog>(), Focal.indexRecord("bananas"), Focal.preview(catalog));
+// => Just(5)
+
+pipe(Focal.from<Catalog>(), Focal.indexRecord("mangoes"), Focal.preview(catalog));
+// => Nothing
+
+// modify — actualiza solo la clave objetivo, no-op si está ausente
+pipe(
+  Focal.from<Catalog>(),
+  Focal.indexRecord("apples"),
+  Focal.modify((n) => n * 2),
+  Focal.run(catalog),
+);
+// => { apples: 20, bananas: 5, cherries: 80 }
+
+// set
+pipe(Focal.from<Catalog>(), Focal.indexRecord("cherries"), Focal.set(999), Focal.run(catalog));
+// => { apples: 10, bananas: 5, cherries: 999 }
+
+// has
+pipe(Focal.from<Catalog>(), Focal.indexRecord("apples"), Focal.has(catalog));  // => true
+pipe(Focal.from<Catalog>(), Focal.indexRecord("mangoes"), Focal.has(catalog)); // => false
+
+// Encadenado con prop
+type Store = { inventory: Catalog };
+pipe(
+  Focal.from<Store>(),
+  Focal.prop("inventory"),
+  Focal.indexRecord("bananas"),
+  Focal.preview({ inventory: catalog }),
+);
+// => Just(5)
+```
+
 ### `match(tagKey, tagValue)` — filtrar por variante de unión discriminada
 
 Navega hasta una variante específica de una unión discriminada. Si el valor es otra variante, las operaciones son no-ops. TypeScript narrowea automáticamente el tipo del foco.
@@ -358,6 +403,8 @@ El tipo del `Focal` resultante se calcula automáticamente según la regla del o
 | `Focal<Lens, ...>` | `each` | `Focal<Traversal, ...>` |
 | `Focal<Lens, ...>` | `index` | `Focal<Prism, ...>` |
 | `Focal<Traversal, ...>` | `index` | `Focal<Traversal, ...>` |
+| `Focal<Lens, ...>` | `indexRecord` | `Focal<Prism, ...>` |
+| `Focal<Traversal, ...>` | `indexRecord` | `Focal<Traversal, ...>` |
 | `Focal<Lens, ...>` | `match` | `Focal<Prism, ...>` |
 | `Focal<Traversal, ...>` | `match` | `Focal<Traversal, ...>` |
 | Cualquiera | `filter` | `Focal<Traversal, ...>` |
@@ -630,6 +677,7 @@ Los focals reutilizables (`skillFocal`, `positionFocal`, etc.) se definen una ve
 | | `each(key)` | Array → Traversal |
 | | `eachRecord(key)` | Record → Traversal |
 | | `index(i)` | Elemento en posición `i` → Prism |
+| | `indexRecord(key)` | Valor en clave `key` de un `Record<string,V>` → Prism |
 | | `match(tagKey, tagValue)` | Variante de unión discriminada → Prism/Traversal |
 | | `filter(pred)` | Filtrado condicional → Traversal |
 | | `compose(focal)` | Composición explícita con otro Focal |

@@ -112,6 +112,20 @@ export const index = <A>(i: number): Prism<A[], A> => ({
 	},
 });
 
+/** Prism focusing on the value at key `k` of a `Record<string, V>`. Nothing if the key is absent.
+ *
+ * Note: `review` reconstructs a single-key record; use `modify` for in-place updates.
+ */
+export const indexRecord = <V>(k: string): Prism<Record<string, V>, V> => ({
+	tag: "Prism",
+	preview: (record) => (k in record ? M.just(record[k]) : M.nothing()),
+	review: (v) => ({ [k]: v }) as Record<string, V>,
+	modify: (f) => (record) => {
+		if (!(k in record)) return record;
+		return { ...record, [k]: f(record[k]) };
+	},
+});
+
 /** Strip index-signature keys, keeping only concretely declared literal keys. */
 export type StripIndex<T> = {
 	[K in keyof T as string extends K ? never : number extends K ? never : K]: T[K];

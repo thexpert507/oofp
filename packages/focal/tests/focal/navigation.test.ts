@@ -786,6 +786,96 @@ describe("Focal.index", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Focal.indexRecord
+// ---------------------------------------------------------------------------
+
+describe("Focal.indexRecord", () => {
+	type Catalog = Record<string, number>;
+
+	const catalog: Catalog = { apples: 10, bananas: 5, cherries: 80 };
+
+	it("produces a Prism focal from a Lens focal", () => {
+		const f = pipe(Focal.from<Catalog>(), Focal.indexRecord("apples"));
+		expect(f.optic.tag).toBe("Prism");
+	});
+
+	it("produces a Traversal focal from a Traversal focal", () => {
+		const f = pipe(Focal.fromEach<Catalog>(), Focal.indexRecord("apples"));
+		expect(f.optic.tag).toBe("Traversal");
+	});
+
+	it("preview returns Just when the key exists", () => {
+		const result = pipe(
+			Focal.from<Catalog>(),
+			Focal.indexRecord("bananas"),
+			Focal.preview(catalog),
+		);
+		expect(result).toEqual(M.just(5));
+	});
+
+	it("preview returns Nothing when the key is absent", () => {
+		const result = pipe(
+			Focal.from<Catalog>(),
+			Focal.indexRecord("mangoes"),
+			Focal.preview(catalog),
+		);
+		expect(result).toEqual(M.nothing());
+	});
+
+	it("modify updates only the targeted key", () => {
+		const result = pipe(
+			Focal.from<Catalog>(),
+			Focal.indexRecord("apples"),
+			Focal.modify((n) => n * 2),
+			Focal.run(catalog),
+		);
+		expect(result).toEqual({ apples: 20, bananas: 5, cherries: 80 });
+	});
+
+	it("modify is a no-op when key is absent", () => {
+		const result = pipe(
+			Focal.from<Catalog>(),
+			Focal.indexRecord("mangoes"),
+			Focal.modify((n) => n * 2),
+			Focal.run(catalog),
+		);
+		expect(result).toBe(catalog);
+	});
+
+	it("set replaces only the targeted key", () => {
+		const result = pipe(
+			Focal.from<Catalog>(),
+			Focal.indexRecord("cherries"),
+			Focal.set(999),
+			Focal.run(catalog),
+		);
+		expect(result).toEqual({ apples: 10, bananas: 5, cherries: 999 });
+	});
+
+	it("has returns true when key exists", () => {
+		const result = pipe(Focal.from<Catalog>(), Focal.indexRecord("apples"), Focal.has(catalog));
+		expect(result).toBe(true);
+	});
+
+	it("has returns false when key is absent", () => {
+		const result = pipe(Focal.from<Catalog>(), Focal.indexRecord("mangoes"), Focal.has(catalog));
+		expect(result).toBe(false);
+	});
+
+	it("chains: prop → indexRecord → preview", () => {
+		type Store = { inventory: Catalog };
+		const store: Store = { inventory: { apples: 10, bananas: 5 } };
+		const result = pipe(
+			Focal.from<Store>(),
+			Focal.prop("inventory"),
+			Focal.indexRecord("bananas"),
+			Focal.preview(store),
+		);
+		expect(result).toEqual(M.just(5));
+	});
+});
+
+// ---------------------------------------------------------------------------
 // Focal.match
 // ---------------------------------------------------------------------------
 

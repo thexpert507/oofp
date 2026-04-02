@@ -146,6 +146,15 @@ export const index =
 		return compose(idxPrism)(focal as never) as ComposeResult<Prism.URI, F, S, A>;
 	};
 
+export const indexRecord =
+	(key: string) =>
+	<F extends URIS, S, A>(
+		focal: Focal<F, S, Record<string, A>>,
+	): ComposeResult<Prism.URI, F, S, A> => {
+		const recPrism = make<Prism.URI, Record<string, A>, A>(Prism.indexRecord<A>(key));
+		return compose(recPrism)(focal as never) as ComposeResult<Prism.URI, F, S, A>;
+	};
+
 // Overload 1: with explicit type param — curried tagKey then tagValue, enabling partial matchers.
 // The two-step currying ensures TV is fully instantiated before Extract<A, Record<TK, TV>> is
 // evaluated, preventing TypeScript from widening TV to its upper bound when A contains
