@@ -19,6 +19,7 @@
  */
 
 import { bench, describe } from "vitest";
+import * as focalApi from "./_helpers/focal-api-impl.ts";
 import * as focal from "./_helpers/focal-impl.ts";
 import * as imperative from "./_helpers/imperative.ts";
 import { candidateProfileResponse } from "./_helpers/fixtures.ts";
@@ -29,6 +30,10 @@ const profile = candidateProfileResponse.included.find(
 ) as ProfileEntity;
 
 describe("Read access — get firstName from ProfileEntity", () => {
+	bench("@oofp/focal  Focal API  from().prop('firstName')", () => {
+		focalApi.readAccess(profile);
+	});
+
 	bench("@oofp/focal  Lens.prop('firstName')", () => {
 		focal.readAccess(profile);
 	});

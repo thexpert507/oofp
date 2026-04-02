@@ -42,11 +42,16 @@
  */
 
 import { bench, describe } from "vitest";
+import * as focalApi from "./_helpers/focal-api-impl.ts";
 import * as focal from "./_helpers/focal-impl.ts";
 import * as imperative from "./_helpers/imperative.ts";
 import { candidateProfileResponse } from "./_helpers/fixtures.ts";
 
 describe("Full domain mapping — NormalizedStoreResponse → CandidateProfile", () => {
+	bench("@oofp/focal  Focal API  pipe chains (from/fromEach/match/prop/collect)", () => {
+		focalApi.domainMapping(candidateProfileResponse);
+	});
+
 	bench("@oofp/focal  optic compositions (Lens + Prism + Traversal)", () => {
 		focal.domainMapping(candidateProfileResponse);
 	});

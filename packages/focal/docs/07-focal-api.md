@@ -767,4 +767,39 @@ Los focals reutilizables (`skillFocal`, `positionFocal`, etc.) se definen una ve
 
 ---
 
+## Rendimiento
+
+La Focal API tiene un costo de abstracción real en runtime. Estos son los ratios aproximados frente a código imperativo equivalente, medidos con Vitest bench sobre un fixture real de respuesta normalizada de API (formato LinkedIn Voyager Dash, ~22 entidades de 8 tipos distintos):
+
+| Escenario | Focal API | Optics puras | Imperativo |
+|---|--:|--:|--:|
+| Lectura simple (`get`) | ~6x más lento | ~1.7x más lento | referencia |
+| Update profundo (`modify + run`) | ~8x más lento | ~4.7x más lento | referencia |
+| Filtrado por tipo (`collect`) | ~8x más lento | ~5.6x más lento | referencia |
+| Mapeo de dominio completo | ~13x más lento | ~7.3x más lento | referencia |
+
+### Por qué estos números no son el problema
+
+La diferencia más grande es en el mapeo de dominio completo: la Focal API tarda ~11 µs por llamada; el imperativo tarda ~0.86 µs. Una respuesta HTTP típica tiene **50,000–200,000 µs** de latencia de red. Esta transformación, que ocurre una vez por respuesta, representa **menos del 0.02%** del tiempo total.
+
+La Focal API es más lenta que las optics puras en este escenario porque el patrón idiomático construye cada `pipe(Focal.from<T>(), ...)` en el momento de la llamada, sin reutilizar composiciones pre-construidas a nivel de módulo. Las optics puras pre-construyen sus traversals como constantes — ese es exactamente el tradeoff entre los dos estilos.
+
+### Lo que no mide el benchmark de rendimiento
+
+El benchmark de runtime compara velocidad de ejecución. Hay un segundo análisis estático que compara los tres enfoques en términos de mantenibilidad:
+
+| Métrica | Imperativo | Optics puras | Focal API |
+|---|--:|--:|--:|
+| Type guards (`function isXxx(): e is T`) | **7** | 0 | 0 |
+| Líneas con spread (`...`) | 2 | 1 | **0** |
+| Puntos de acoplamiento al schema | 7 | 21 | 22 |
+| Llamadas a `.filter()` | **9** | 1 | 1 |
+| Composiciones reutilizables en el módulo | 0 | **10** | 7 |
+
+El imperativo requiere 7 type guards manuales — uno por variante de la unión — y 9 llamadas a `.filter()`. Cada guard es una string hardcodeada que el compilador no puede verificar. La Focal API elimina ambas categorías de boilerplate: `Focal.match` deriva la discriminación del tipo TypeScript directamente.
+
+Para el análisis completo con metodología y datos crudos, ver la [referencia de benchmarks](https://oofp.pages.dev/reference/benchmarks#oofpfocal--optics-vs-imperative) en la documentación del sitio.
+
+---
+
 **Anterior:** [Composición](./06-composicion.md) — Combinar diferentes tipos de optics directamente

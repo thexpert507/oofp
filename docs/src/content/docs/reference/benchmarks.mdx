@@ -443,3 +443,134 @@ pnpm --filter @oofp/benchmarks bench
 ```
 
 Source code: [`packages/benchmarks/comparison/`](https://github.com/thexpert507/oofp/tree/main/packages/benchmarks/comparison)
+
+---
+
+## @oofp/focal — Optics vs Imperative
+
+Performance and maintainability comparison of `@oofp/focal` against plain imperative code, across four scenarios extracted from a real normalized-store API response (LinkedIn Voyager Dash format).
+
+### Methodology
+
+- **Runtime:** Node.js 20, Apple Silicon (ARM64)
+- **Tool:** Vitest bench
+- **Fixture:** A `NormalizedStoreResponse` with ~22 entities across 8 types (Profile, Position, PositionGroup, Skill, Certification, Language, Education, plus unknown entities as noise)
+- **Candidates:** Three implementations per scenario — Focal API (high-level), optics (low-level Lens/Prism/Traversal), and imperative
+
+The fixture models the exact shape of a normalized API response: a heterogeneous `included[]` array where each entry is discriminated by a `$type` string — the same pattern as Redux normalized state or JSON:API.
+
+### How to reproduce
+
+```bash
+pnpm --filter @oofp/benchmarks exec vitest bench --run comparison/focal
+```
+
+Source code: [`packages/benchmarks/comparison/focal/`](https://github.com/thexpert507/oofp/tree/main/packages/benchmarks/comparison/focal)
+
+---
+
+### Scenario 1: Read access
+
+**Task:** extract `firstName` from a `ProfileEntity`.
+
+| Implementation | Relative |
+|---|--:|
+| imperative `profile.firstName` | 1.0x (reference) |
+| optics `Lens.prop('firstName')` | ~1.7x slower |
+| Focal API `from().prop().get()` | ~6x slower |
+
+Direct property access will always be the fastest for simple reads — that is expected. What this measures is the **constant overhead of the abstraction itself**, not a scaling cost. Optic chains do not get slower as nesting depth increases; they compose once.
+
+---
+
+### Scenario 2: Deep immutable update
+
+**Task:** produce a new `NormalizedStoreResponse` where every `ProfileEntity`'s `firstName` is replaced — three levels of nesting deep.
+
+| Implementation | Relative |
+|---|--:|
+| imperative `map` + spread chain | 1.0x (reference) |
+| optics `Traversal.compose + modify` | ~4.7x slower |
+| Focal API `from().elements().match().prop().modify()` | ~8x slower |
+
+Both do the same structural traversal. The imperative approach uses two levels of spread (`{ ...response, included: response.included.map(...) }`). The Focal API expresses the entire path as a single declarative pipe with no manual spread — the optic machinery handles the immutable reconstruction.
+
+---
+
+### Scenario 3: Discriminated union filter
+
+**Task:** collect only `SkillEntity` items from a heterogeneous `IncludedEntity[]`.
+
+| Implementation | Relative |
+|---|--:|
+| imperative `array.filter(isSkill)` | 1.0x (reference) |
+| optics `Traversal.each + Prism.match + collect` | ~5.6x slower |
+| Focal API `from().elements().match().collect()` | ~8.2x slower |
+
+This is the scenario where the maintainability argument is strongest. The imperative version requires a manually-written type guard (`function isSkill(e): e is SkillEntity`) per variant — 7 guards for 7 types, each a potential source of bugs (wrong `$type` string, missing field check). `Focal.match` derives discrimination from the TypeScript type directly: adding a new variant means one new `match(...)` call, not a new guard function.
+
+---
+
+### Scenario 4: Full domain mapping
+
+**Task:** transform `NormalizedStoreResponse` → typed `CandidateProfile` domain object, discriminating and collecting all 7 entity types, extracting specific fields, and handling optional values.
+
+| Implementation | Relative |
+|---|--:|
+| imperative `filter/map/find + optional chaining` | 1.0x (reference) |
+| optics (Lens + Prism + Traversal compositions) | ~7.3x slower |
+| Focal API (pipe chains from root) | ~13x slower |
+
+This is the most realistic scenario. The imperative version has 7 type guards, 9 `.filter()` calls, and optional chaining scattered across multiple locations. When the schema changes, every one of those call sites is a potential update target.
+
+The Focal API is slowest here because each `pipe(Focal.from<T>(), ...)` is constructed at call time — this is the idiomatic pattern (maximum composability, no shared module-level state). The low-level optics version pre-builds its compositions as module-level constants and reuses them, which accounts for roughly half the gap.
+
+---
+
+### Performance vs maintainability
+
+The raw numbers tell one story. The time per call tells a different one:
+
+| Implementation | ops/sec (approx.) | Time per call |
+|---|--:|--:|
+| imperative | ~1,170,000 | ~0.86 µs |
+| optics (pure) | ~160,000 | ~6.2 µs |
+| Focal API | ~89,000 | ~11.2 µs |
+
+A typical HTTP response from a backend service has **50,000–200,000 µs** of network latency. The difference between the imperative and Focal API implementations of `domainMapping` — a transformation that runs once per API response — is **~10 µs**. That is **< 0.02%** of the total response time budget.
+
+This is exactly the scenario Donald Knuth had in mind: *"premature optimization is the root of all evil"*. The full quote adds: *"yet we should not pass up our opportunities in that critical 3%"*. A one-per-response transformation is not the critical 3%.
+
+### Static maintainability metrics
+
+Beyond runtime performance, the three implementations can be compared on objective code-quality signals derived from static analysis of their source files:
+
+| Metric | imperative | optics (pure) | Focal API |
+|---|--:|--:|--:|
+| Type guards (`function isXxx(): e is T`) | **7** | 0 | 0 |
+| Lines with spread operators (`...`) | 2 | 1 | **0** |
+| Schema coupling points (hard-coded `$type` strings + field names) | 7 | 21 | 22 |
+| `.filter()` call sites | **9** | 1 | 1 |
+| Reusable optic/focal constants at module level | 0 | **10** | 7 |
+
+**Reading the table:**
+
+- **Type guards (lower is better):** The imperative approach requires one manually-written guard per union variant — 7 for 7 types. Both optic approaches derive discrimination from the TypeScript type: zero guards. Each guard in the imperative version is a potential bug (wrong string literal, wrong field check) that the compiler cannot catch.
+- **Spread operators (lower is better):** The Focal API produces zero — `modify + run` handles the full immutable reconstruction. The imperative version's 2 spreads represent the manual nesting that grows with schema depth.
+- **Schema coupling points:** Counterintuitively, both optic approaches score higher than imperative here because field names appear as string arguments to `prop("firstName")`, `prop("title")`, etc. The key difference is **centralization**: those strings appear in one definition that all consumers share, rather than being duplicated across every call site.
+- **Filter calls (lower is better):** The imperative version calls `.filter()` 9 times across the four scenarios. Both optic approaches reduce this to 1 (a single `.filter()` to eliminate `undefined` values from an optional field).
+- **Reusable compositions (higher is better):** The low-level optics version defines 10 module-level constants (prisms and traversals) that can be imported and composed anywhere in the codebase. The Focal API has 7 (the `T_*` string constants). The imperative version has none — every function rebuilds its logic from scratch.
+
+### When the performance penalty matters
+
+The ~8-13x gap is **irrelevant** for:
+- Any transformation that runs once per API response or user action
+- Any code path where network I/O, database queries, or rendering dominate
+- Any throughput below ~1M calls/sec in a hot loop
+
+The gap **does matter** for:
+- Hot paths with measured CPU bottlenecks (a profiler shows this function in the top 3%)
+- Streaming parsers processing millions of records per second
+- WebGL / game loops running at 60hz with tight per-frame budgets
+
+For everything else — which is virtually all application code — the Fowler principle applies: code is read far more often than it is written, and the cost of change is the metric that matters in production.
