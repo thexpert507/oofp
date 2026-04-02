@@ -180,14 +180,21 @@ Esto es lógico: si alguna parte de la cadena puede fallar (Prism) o tener múlt
 
 ```
 packages/focal/lib/
-├── index.ts       # Re-exporta todo como namespaces (Lens, Prism, Iso, Traversal)
-├── iso.ts         # Iso<A, B> — isomorfismos (tipo, constructores, operaciones, composición)
-├── lens.ts        # Lens<S, A> — getter/setter totales
-├── prism.ts       # Prism<S, A> — enfoque parcial
-└── traversal.ts   # Traversal<S, A> — múltiples focos
+├── index.ts           # Re-exporta todo como namespaces (Lens, Prism, Iso, Traversal, Focal)
+├── iso.ts             # Iso<A, B> — isomorfismos (tipo, constructores, operaciones, composición)
+├── lens.ts            # Lens<S, A> — getter/setter totales
+├── prism.ts           # Prism<S, A> — enfoque parcial
+├── traversal.ts       # Traversal<S, A> — múltiples focos
+└── focal/
+    ├── index.ts       # Punto de entrada de la API Focal
+    ├── types.ts       # Tipo Focal<F, S, A>
+    ├── methods.ts     # Entry points, navegadores y terminators
+    └── compose.ts     # Composición type-safe entre Focals
 ```
 
-Cada módulo contiene el tipo, constructores, operaciones y su propia función `compose` con overloads para composición cruzada. No hay un archivo de composición separado.
+Cada módulo de optic contiene el tipo, constructores, operaciones y su propia función `compose` con overloads para composición cruzada. No hay un archivo de composición separado.
+
+El directorio `focal/` contiene la **API Focal**: una capa ergonómica sobre los optics puros que permite encadenar cualquier combinación de optics en un único pipe uniforme, con inferencia de tipos automática.
 
 ## Orden de lectura recomendado
 
@@ -196,6 +203,7 @@ Cada módulo contiene el tipo, constructores, operaciones y su propia función `
 3. **[Prism](./04-prism.md)** — Cuando el foco podría no existir.
 4. **[Traversal](./05-traversal.md)** — Cuando hay múltiples focos.
 5. **[Composición](./06-composicion.md)** — Combinar diferentes tipos de optics.
+6. **[API Focal](./07-focal-api.md)** — La capa ergonómica: encadenar optics con un pipe limpio y uniforme. **Leer después de entender los optics puros.**
 
 Cada documento incluye:
 - Explicación conceptual con analogías

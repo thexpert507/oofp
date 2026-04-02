@@ -319,10 +319,309 @@ pipe(allAges, Traversal.modify((n) => n + 1))(acme);
 
 ---
 
-## Barrel import
+## Focal API
 
-All optics are also available via the root entry point:
+The **Focal API** is the ergonomic layer built on top of the pure optics. Instead of managing module switches manually (`Lens.compose`, then `Traversal.compose`, etc.), you chain everything through a single uniform pipe. The resulting type is inferred automatically at every step.
 
 ```typescript
-import { Lens, Prism, Traversal, Iso } from "@oofp/focal";
+import { pipe } from "@oofp/core/pipe";
+import { Focal } from "@oofp/focal";
+```
+
+Or with a namespace import:
+
+```typescript
+import * as Focal from "@oofp/focal/focal"; // direct sub-entry
+// or via the barrel:
+import { Focal } from "@oofp/focal";
+```
+
+### When to use Focal API vs pure optics
+
+| Pure optics | Focal API |
+|---|---|
+| You need the raw optic value (e.g. to store it, pass it to a library) | You want to navigate and update inline in a pipe |
+| You are composing across module boundaries where types matter | You want maximum readability with minimum boilerplate |
+| You are building reusable primitive optics | You are building application-level data transformations |
+
+You can always move between the two: `Focal.fromOptic(rawOptic)` wraps a pure optic, and `Focal.toOptic(focal)` extracts it back.
+
+---
+
+### Entry points
+
+Every Focal chain starts with one of these:
+
+| Function | Returns | Description |
+|---|---|---|
+| `Focal.from<S>()` | `Focal<Lens, S, S>` | Identity Lens over `S` — the most common starting point |
+| `Focal.fromEach<A>()` | `Focal<Traversal, A[], A>` | Traversal over all elements of `A[]` |
+| `Focal.fromOptic(optic)` | `Focal<F, S, A>` | Wraps a raw Lens, Prism, Iso, or Traversal |
+| `Focal.toOptic(focal)` | `Kind<F, S, A>` | Extracts the underlying raw optic |
+
+---
+
+### Navigation
+
+Navigation methods take a `Focal` and return a deeper `Focal`. The resulting type degrades automatically following the weakest-optic rule.
+
+| Method | Result type | Description |
+|---|---|---|
+| `prop(key)` | same as input | Focus on a field — always present |
+| `optional(key)` | `Prism` (or `Traversal`) | Focus on a `null \| undefined` field |
+| `each(key)` | `Traversal` | Traverse all elements of an array field |
+| `eachRecord(key)` | `Traversal` | Traverse all values of a `Record<string, V>` field |
+| `index(i)` | `Prism` (or `Traversal`) | Focus on element at position `i` |
+| `match(tagKey, tagValue)` | `Prism` (or `Traversal`) | Focus on a discriminated union variant |
+| `filter(pred)` | `Traversal` | Traverse only elements matching a predicate |
+| `compose(focal)` | weakest of both | Explicit composition with another `Focal` |
+
+### Terminators
+
+#### Data-last (use with `pipe` + `run`)
+
+These return a function `(s: S) => T` — they don't execute until you apply them:
+
+| Method | Returns | Description |
+|---|---|---|
+| `modify(f)` | `(s: S) => S` | Apply `f` to every focus. No-op when focus is absent. |
+| `set(a)` | `(s: S) => S` | Replace every focus with `a` |
+| `fold(init, f)` | `(s: S) => B` | Reduce all foci with an accumulator |
+| `run(s)` | `T` | Apply the updater returned by `modify`, `set`, or `fold` to `s` |
+
+#### Data-first (read immediately)
+
+| Method | Available for | Returns | Description |
+|---|---|---|---|
+| `get(s)` | `Focal<Lens>` or `Focal<Iso>` | `A` | Extract the focus (always present) |
+| `preview(s)` | `Focal<Prism>` | `Maybe<A>` | Extract the focus if present |
+| `collect(s)` | any `Focal` | `A[]` | Collect all foci into an array |
+| `has(s)` | any `Focal` | `boolean` | `true` if at least one focus exists |
+| `count(s)` | any `Focal` | `number` | Number of foci |
+
+---
+
+### End-to-end example
+
+The following example uses a realistic nested structure — a `Company` with `departments` and `employees` — to show how the Focal API handles reads, writes, and aggregations of any depth with a single clean pipe.
+
+```typescript
+import { pipe } from "@oofp/core/pipe";
+import { Focal } from "@oofp/focal";
+
+interface Person     { name: string; age: number }
+interface Address    { city: string; zip: string }
+interface Employee   { person: Person; address: Address; salary: number }
+interface Department { name: string; employees: Employee[]; budget: number }
+interface Company    { name: string; ceo: Person; departments: Department[] }
+
+const acme: Company = {
+  name: "Acme",
+  ceo: { name: "Bob", age: 45 },
+  departments: [
+    {
+      name: "Engineering",
+      employees: [
+        { person: { name: "Alice", age: 30 }, address: { city: "NYC", zip: "10001" }, salary: 100_000 },
+        { person: { name: "Charlie", age: 25 }, address: { city: "LA",  zip: "90001" }, salary: 80_000 },
+      ],
+      budget: 500_000,
+    },
+    {
+      name: "Sales",
+      employees: [
+        { person: { name: "Diana", age: 35 }, address: { city: "Chicago", zip: "60601" }, salary: 90_000 },
+      ],
+      budget: 200_000,
+    },
+  ],
+};
+
+// ── Reading ──────────────────────────────────────────────────────────────────
+
+// Read a nested value (Lens chain → get)
+pipe(Focal.from<Company>(), Focal.prop("ceo"), Focal.prop("age"), Focal.get(acme));
+// => 45
+
+// Collect all employee names (6-step chain)
+pipe(
+  Focal.from<Company>(),
+  Focal.each("departments"),
+  Focal.each("employees"),
+  Focal.prop("person"),
+  Focal.prop("name"),
+  Focal.collect(acme),
+);
+// => ["Alice", "Charlie", "Diana"]
+
+// Sum all salaries with fold
+pipe(
+  Focal.from<Company>(),
+  Focal.each("departments"),
+  Focal.each("employees"),
+  Focal.prop("salary"),
+  Focal.fold(0, (acc, n) => acc + n),
+  Focal.run(acme),
+);
+// => 270_000
+
+// Count departments
+pipe(Focal.from<Company>(), Focal.each("departments"), Focal.count(acme));
+// => 2
+
+// Read department at index 1 (may not exist → preview returns Maybe)
+pipe(Focal.from<Company>(), Focal.prop("departments"), Focal.index(1), Focal.prop("name"), Focal.preview(acme));
+// => Just("Sales")
+
+// ── Writing ──────────────────────────────────────────────────────────────────
+
+// Set a deeply nested field
+pipe(
+  Focal.from<Company>(),
+  Focal.prop("ceo"),
+  Focal.prop("name"),
+  Focal.set("Robert"),
+  Focal.run(acme),
+);
+// => { ...acme, ceo: { name: "Robert", age: 45 } }
+
+// Give everyone a 10% raise
+pipe(
+  Focal.from<Company>(),
+  Focal.each("departments"),
+  Focal.each("employees"),
+  Focal.prop("salary"),
+  Focal.modify((n) => n * 1.1),
+  Focal.run(acme),
+);
+
+// Double the budget of departments with budget > 300_000
+pipe(
+  Focal.from<Company>(),
+  Focal.each("departments"),
+  Focal.filter((d) => d.budget > 300_000),
+  Focal.prop("budget"),
+  Focal.modify((n) => n * 2),
+  Focal.run(acme),
+);
+// Engineering: 500_000 → 1_000_000  |  Sales: 200_000 (unchanged)
+
+// ── Discriminated unions ──────────────────────────────────────────────────────
+
+type Circle = { kind: "circle"; r: number };
+type Rect   = { kind: "rect"; w: number; h: number };
+type Shape  = Circle | Rect;
+
+const shapes: Shape[] = [
+  { kind: "circle", r: 5 },
+  { kind: "rect", w: 3, h: 4 },
+  { kind: "circle", r: 10 },
+];
+
+// Collect radii of all circles — TypeScript narrows the type automatically
+pipe(
+  Focal.fromEach<Shape>(),
+  Focal.match("kind", "circle"),
+  Focal.prop("r"),               // ✓ "r" only exists on Circle
+  Focal.collect(shapes),
+);
+// => [5, 10]
+
+// Double all circle radii, leave rects untouched
+pipe(
+  Focal.fromEach<Shape>(),
+  Focal.match("kind", "circle"),
+  Focal.prop("r"),
+  Focal.modify((r) => r * 2),
+  Focal.run(shapes),
+);
+// => [{ kind: "circle", r: 10 }, { kind: "rect", w: 3, h: 4 }, { kind: "circle", r: 20 }]
+
+// ── Optional fields ───────────────────────────────────────────────────────────
+
+interface User { name: string; address: { city: string; zip: string } | null }
+
+const users: User[] = [
+  { name: "Alice", address: { city: "NYC", zip: "10001" } },
+  { name: "Bob",   address: null },
+  { name: "Carol", address: { city: "LA",  zip: "90001" } },
+];
+
+// Collect cities — null addresses are silently skipped
+pipe(
+  Focal.fromEach<User>(),
+  Focal.optional("address"),
+  Focal.prop("city"),
+  Focal.collect(users),
+);
+// => ["NYC", "LA"]  — Bob is omitted
+
+// ── Reusable partial matchers ─────────────────────────────────────────────────
+
+// Fix the union type up-front, partially apply tagKey, reuse across multiple pipes
+const byKind = Focal.match<Shape>()("kind");
+
+pipe(Focal.fromEach<Shape>(), byKind("circle"), Focal.prop("r"), Focal.collect(shapes));
+// => [5, 10]
+
+pipe(Focal.fromEach<Shape>(), byKind("rect"), Focal.prop("w"), Focal.collect(shapes));
+// => [3]
+```
+
+---
+
+### Domain mapping with normalized stores
+
+The Focal API is particularly effective when working with normalized API responses where different entity types are mixed in a single array. Define reusable `Focal` values for each entity type and compose them freely:
+
+```typescript
+import { pipe } from "@oofp/core/pipe";
+import { Focal } from "@oofp/focal";
+
+// Each entity in the array is identified by a "$type" discriminant
+type IncludedEntity = SkillEntity | PositionEntity | CertificationEntity | ProfileEntity;
+
+// Define reusable focals for each entity variant
+const skillFocal = pipe(
+  Focal.from<IncludedEntity>(),
+  Focal.match<IncludedEntity>()("$type")("com.linkedin.voyager.dash.identity.profile.Skill"),
+);
+
+const positionFocal = pipe(
+  Focal.from<IncludedEntity>(),
+  Focal.match<IncludedEntity>()("$type")("com.linkedin.voyager.dash.identity.profile.Position"),
+);
+
+// Use them to extract domain data
+function toCandidateProfile(response: { included: IncludedEntity[] }) {
+  const { included } = response;
+
+  return {
+    skills: pipe(
+      Focal.fromEach<IncludedEntity>(),
+      Focal.compose(skillFocal),
+      Focal.prop("name"),
+      Focal.collect(included),
+    ),
+    // => ["Scrum", "Artificial Intelligence (AI)", "Machine Learning", ...]
+
+    jobTitles: pipe(
+      Focal.fromEach<IncludedEntity>(),
+      Focal.compose(positionFocal),
+      Focal.prop("title"),
+      Focal.collect(included),
+    ),
+    // => ["Founder & CTO", "CTO", "Tech Lead / Senior Software Engineer"]
+  };
+}
+```
+
+---
+
+## Barrel import
+
+All optics and the Focal API are available via the root entry point:
+
+```typescript
+import { Lens, Prism, Traversal, Iso, Focal } from "@oofp/focal";
 ```
