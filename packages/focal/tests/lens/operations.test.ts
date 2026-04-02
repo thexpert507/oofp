@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
 import { pipe } from "@oofp/core/pipe";
-import { prop, identity, view, set, over } from "../../lib/lens.ts";
-import { type Company, type Person, alice, acme } from "./fixtures.ts";
+import { describe, expect, it } from "vitest";
+import { identity, modify, prop, set, view } from "../../lib/lens.ts";
+import { type Company, type Person, acme, alice } from "./fixtures.ts";
 
-describe("view / set / over", () => {
+describe("view / set / modify", () => {
 	const ageLens = pipe(identity<Person>(), prop("age"));
 
 	it("view — extracts the focus, works with pipe", () => {
@@ -16,30 +16,25 @@ describe("view / set / over", () => {
 		expect(result.age).toBe(31);
 	});
 
-	it("over — maps a function over the focus, works with pipe", () => {
+	it("modify — maps a function over the focus, works with pipe", () => {
 		const result = pipe(
 			ageLens,
-			over((n) => n + 1),
+			modify((n) => n + 1),
 		)(alice);
 		expect(result.age).toBe(31);
 	});
 
-	it("over with identity function changes nothing (sanity check)", () => {
+	it("modify with identity function changes nothing (sanity check)", () => {
 		const result = pipe(
 			ageLens,
-			over((n) => n),
+			modify((n) => n),
 		)(alice);
 		expect(result).toEqual(alice);
 	});
 });
 
 describe("Deep nesting — Company → CEO → Address → Street", () => {
-	const ceoStreetLens = pipe(
-		identity<Company>(),
-		prop("ceo"),
-		prop("address"),
-		prop("street"),
-	);
+	const ceoStreetLens = pipe(identity<Company>(), prop("ceo"), prop("address"), prop("street"));
 
 	it("reads 3 levels deep", () => {
 		expect(ceoStreetLens.get(acme)).toBe("123 Main St");
@@ -53,10 +48,10 @@ describe("Deep nesting — Company → CEO → Address → Street", () => {
 		expect(acme.ceo.address.street).toBe("123 Main St");
 	});
 
-	it("over modifies 3 levels deep", () => {
+	it("modify modifies 3 levels deep", () => {
 		const result = pipe(
 			ceoStreetLens,
-			over((s) => s.toUpperCase()),
+			modify((s) => s.toUpperCase()),
 		)(acme);
 		expect(result.ceo.address.street).toBe("123 MAIN ST");
 	});

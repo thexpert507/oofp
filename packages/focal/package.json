@@ -51,6 +51,11 @@
 			"types": "./dist/iso.d.ts",
 			"import": "./dist/es/iso.js",
 			"require": "./dist/cjs/iso.cjs"
+		},
+		"./compose": {
+			"types": "./dist/compose.d.ts",
+			"import": "./dist/es/compose.js",
+			"require": "./dist/cjs/compose.cjs"
 		}
 	},
 	"scripts": {

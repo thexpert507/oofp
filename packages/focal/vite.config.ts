@@ -13,6 +13,7 @@ export default defineConfig({
 				prism: resolve(__dirname, "lib/prism.ts"),
 				traversal: resolve(__dirname, "lib/traversal.ts"),
 				iso: resolve(__dirname, "lib/iso.ts"),
+				compose: resolve(__dirname, "lib/compose.ts"),
 			},
 			name: "focal",
 			formats: ["es", "cjs"],

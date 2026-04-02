@@ -6,6 +6,7 @@ import * as M from "@oofp/core/maybe";
 import * as Lens from "@oofp/focal/lens";
 import * as Prism from "@oofp/focal/prism";
 import * as Traversal from "@oofp/focal/traversal";
+import { compose } from "@oofp/focal/compose";
 
 import type {
 	IncludedEntity,
@@ -47,8 +48,8 @@ export function readAccess(profile: ProfileEntity): string {
 // Focal composes the path once; the update is expressed declaratively.
 
 const eachEntity = Traversal.each<IncludedEntity>();
-const profilesTraversal = pipe(eachEntity, Traversal.compose(profilePrism));
-const firstNameTraversal = pipe(profilesTraversal, Traversal.compose(firstNameLens));
+const profilesTraversal = compose(profilePrism)(eachEntity);
+const firstNameTraversal = compose(firstNameLens)(profilesTraversal);
 
 export function deepUpdate(response: NormalizedStoreResponse): NormalizedStoreResponse {
 	return {
@@ -63,7 +64,7 @@ export function deepUpdate(response: NormalizedStoreResponse): NormalizedStoreRe
 // Focal: Traversal.each + Prism.match handles the discrimination and
 // collection in a single composable pass — no manual type guard boilerplate.
 
-const allSkillsTraversal = pipe(eachEntity, Traversal.compose(skillPrism));
+const allSkillsTraversal = compose(skillPrism)(eachEntity);
 
 export function filterByType(entities: IncludedEntity[]): SkillEntity[] {
 	return pipe(allSkillsTraversal, Traversal.collect(entities));
@@ -75,7 +76,7 @@ function collectEntities<T extends IncludedEntity>(
 	included: IncludedEntity[],
 	prism: Prism.Prism<IncludedEntity, T>,
 ): T[] {
-	return pipe(pipe(eachEntity, Traversal.compose(prism)), Traversal.collect(included));
+	return pipe(compose(prism)(eachEntity), Traversal.collect(included));
 }
 
 export function domainMapping(response: NormalizedStoreResponse): CandidateProfile {
@@ -105,23 +106,20 @@ export function domainMapping(response: NormalizedStoreResponse): CandidateProfi
 			: null;
 
 	const titleLens = pipe(Lens.identity<PositionEntity>(), Lens.prop("title"));
-	const jobTitles = pipe(
-		pipe(eachEntity, Traversal.compose(positionPrism)),
-		Traversal.compose(titleLens),
+	const jobTitles: string[] = pipe(
+		compose(titleLens)(compose(positionPrism)(eachEntity)),
 		Traversal.collect(included),
 	);
 
 	const groupCompanyLens = pipe(Lens.identity<PositionGroupEntity>(), Lens.prop("companyName"));
-	const employers = pipe(
-		pipe(eachEntity, Traversal.compose(positionGroupPrism)),
-		Traversal.compose(groupCompanyLens),
+	const employers: string[] = pipe(
+		compose(groupCompanyLens)(compose(positionGroupPrism)(eachEntity)),
 		Traversal.collect(included),
 	).filter((n): n is string => n !== undefined);
 
 	const skillNameLens = pipe(Lens.identity<SkillEntity>(), Lens.prop("name"));
-	const skills = pipe(
-		pipe(eachEntity, Traversal.compose(skillPrism)),
-		Traversal.compose(skillNameLens),
+	const skills: string[] = pipe(
+		compose(skillNameLens)(compose(skillPrism)(eachEntity)),
 		Traversal.collect(included),
 	);
 

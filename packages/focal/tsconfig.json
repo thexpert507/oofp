@@ -1,18 +1,11 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
-		"lib": [
-			"ES2020"
-		],
+		"lib": ["ES2020"],
 		"allowImportingTsExtensions": true,
 		"paths": {
-			"@/*": [
-				"./lib/*"
-			],
+			"@/*": ["./lib/*"]
 		}
 	},
-	"include": [
-		"lib",
-		"tests"
-	]
+	"include": ["lib", "tests"]
 }

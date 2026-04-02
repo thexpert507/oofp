@@ -10,16 +10,34 @@
 import * as M from "@oofp/core/maybe";
 import type { Lens } from "./lens.ts";
 import type { Prism } from "./prism.ts";
-import type { Traversal } from "./traversal.ts";
 
 // ---------------------------------------------------------------------------
-// Type
+// URI — self-registration in the HKT registry
+// ---------------------------------------------------------------------------
+
+export const URI = "Iso";
+export type URI = typeof URI;
+
+declare module "./hkt.ts" {
+	interface URItoKind<S, A> {
+		Iso: Iso<S, A>;
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Type — minimal data, no embedded behaviour
 // ---------------------------------------------------------------------------
 
 export interface Iso<A, B> {
 	readonly tag: "Iso";
 	readonly to: (a: A) => B;
 	readonly from: (b: B) => A;
+}
+
+declare module "./hkt" {
+	interface URItoKind<S, A> {
+		Iso: Iso<S, A>;
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -89,7 +107,7 @@ export const toPrism = <A, B>(iso: Iso<A, B>): Prism<A, B> => ({
 });
 
 // ---------------------------------------------------------------------------
-// Operations (iso flows through the pipe)
+// Operations — free functions, all logic lives here
 // ---------------------------------------------------------------------------
 
 /** Apply the forward direction of an Iso.
@@ -117,64 +135,11 @@ export const review =
 /** Modify a value: convert to B, apply f, convert back to A.
  *
  * ```ts
- * pipe(celsiusToFahrenheit, over(f => f * 2))(100) // 100C → 212F → 424F → ~217.8C
+ * pipe(celsiusToFahrenheit, modify(f => f * 2))(100) // 100C → 212F → 424F → ~217.8C
  * ```
  */
-export const over =
+export const modify =
 	<B>(f: (b: B) => B) =>
 	<A>(iso: Iso<A, B>) =>
 	(a: A): A =>
 		iso.from(f(iso.to(a)));
-
-// ---------------------------------------------------------------------------
-// Composition
-// ---------------------------------------------------------------------------
-
-/** Unified compose (pipe-friendly, discriminates on to.tag).
- *
- * - Iso + Iso       = Iso
- * - Iso + Lens      = Lens
- * - Iso + Prism     = Prism
- * - Iso + Traversal = Traversal
- */
-export function compose<B, C>(to: Iso<B, C>): <A>(from: Iso<A, B>) => Iso<A, C>;
-export function compose<B, C>(to: Lens<B, C>): <A>(from: Iso<A, B>) => Lens<A, C>;
-export function compose<B, C>(to: Prism<B, C>): <A>(from: Iso<A, B>) => Prism<A, C>;
-export function compose<B, C>(to: Traversal<B, C>): <A>(from: Iso<A, B>) => Traversal<A, C>;
-export function compose<B, C>(
-	to: Iso<B, C> | Lens<B, C> | Prism<B, C> | Traversal<B, C>,
-): <A>(from: Iso<A, B>) => Iso<A, C> | Lens<A, C> | Prism<A, C> | Traversal<A, C> {
-	return <A>(from: Iso<A, B>) => {
-		if (to.tag === "Traversal") {
-			const traversal = to as Traversal<B, C>;
-			return {
-				tag: "Traversal" as const,
-				modify: (f: (c: C) => C) => (a: A) => from.from(traversal.modify(f)(from.to(a))),
-				toArray: (a: A) => traversal.toArray(from.to(a)),
-			};
-		}
-		if (to.tag === "Prism") {
-			const prism = to as Prism<B, C>;
-			return {
-				tag: "Prism" as const,
-				preview: (a: A) => prism.preview(from.to(a)),
-				review: (c: C) => from.from(prism.review(c)),
-			};
-		}
-		if (to.tag === "Lens") {
-			const lens = to as Lens<B, C>;
-			return {
-				tag: "Lens" as const,
-				get: (a: A) => lens.get(from.to(a)),
-				set: (c: C) => (a: A) => from.from(lens.set(c)(from.to(a))),
-			};
-		}
-		// default: Iso + Iso
-		const inner = to as Iso<B, C>;
-		return {
-			tag: "Iso" as const,
-			to: (a: A) => inner.to(from.to(a)),
-			from: (c: C) => from.from(inner.from(c)),
-		};
-	};
-}

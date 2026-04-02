@@ -10,6 +10,7 @@
 			"@oofp/focal/prism": ["../focal/lib/prism.ts"],
 			"@oofp/focal/traversal": ["../focal/lib/traversal.ts"],
 			"@oofp/focal/iso": ["../focal/lib/iso.ts"],
+			"@oofp/focal/compose": ["../focal/lib/compose.ts"],
 			"@oofp/focal": ["../focal/lib/index.ts"],
 			"@oofp/core/pipe": ["../core/lib/pipe.ts"],
 			"@oofp/core/maybe": ["../core/lib/maybe.ts"],

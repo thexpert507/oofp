@@ -25,6 +25,7 @@ import type { Maybe } from "@oofp/core/maybe";
 import { describe, expect, it } from "vitest";
 
 import { pipe } from "@oofp/core/pipe";
+import { compose } from "../lib/compose.ts";
 import * as Iso from "../lib/iso.ts";
 import * as Lens from "../lib/lens.ts";
 import * as Prism from "../lib/prism.ts";
@@ -67,7 +68,7 @@ describe("Lens + Prism = Prism", () => {
 	// Focus: User → email (Lens) → string inside Maybe (Prism)
 	const emailLens = pipe(Lens.identity<User>(), Lens.prop("email"));
 	const justPrism = Prism._just<string>();
-	const userEmail = pipe(emailLens, Lens.compose(justPrism));
+	const userEmail = compose(justPrism)(emailLens);
 
 	it("preview succeeds when the Prism matches", () => {
 		expect(userEmail.preview(alice)).toEqual(M.just("alice@example.com"));
@@ -91,7 +92,7 @@ describe("Lens + Traversal = Traversal", () => {
 	// Focus: User → scores (Lens) → each number (Traversal)
 	const scoresLens = pipe(Lens.identity<User>(), Lens.prop("scores"));
 	const eachScore = Traversal.each<number>();
-	const allScores = pipe(scoresLens, Lens.compose(eachScore));
+	const allScores = compose(eachScore)(scoresLens);
 
 	it("toArray collects all foci", () => {
 		expect(allScores.toArray(alice)).toEqual([85, 92, 78]);
@@ -124,7 +125,7 @@ describe("Prism + Lens = Prism", () => {
 	// Focus: Either<string, {level, title}> → {level, title} (Prism) → level (Lens)
 	const rightPrism = Prism._right<string, { level: number; title: string }>();
 	const levelLens = pipe(Lens.identity<{ level: number; title: string }>(), Lens.prop("level"));
-	const roleLevel = pipe(rightPrism, Prism.compose(levelLens));
+	const roleLevel = compose(levelLens)(rightPrism);
 
 	it("preview succeeds when the Prism matches", () => {
 		expect(roleLevel.preview(E.right({ level: 3, title: "Senior" }))).toEqual(M.just(3));
@@ -150,7 +151,7 @@ describe("Prism + Traversal = Traversal", () => {
 	// Focus: Maybe<number[]> → number[] (Prism) → each number (Traversal)
 	const justPrism = Prism._just<number[]>();
 	const eachNum = Traversal.each<number>();
-	const maybeNums = pipe(justPrism, Prism.compose(eachNum));
+	const maybeNums = compose(eachNum)(justPrism);
 
 	it("toArray collects foci when Prism matches", () => {
 		expect(maybeNums.toArray(M.just([1, 2, 3]))).toEqual([1, 2, 3]);
@@ -192,7 +193,7 @@ describe("Traversal + Lens = Traversal", () => {
 	// Focus: User[] → each User (Traversal) → name (Lens)
 	const eachUser = Traversal.each<User>();
 	const nameLens = pipe(Lens.identity<User>(), Lens.prop("name"));
-	const allNames = pipe(eachUser, Traversal.compose(nameLens));
+	const allNames = compose(nameLens)(eachUser);
 
 	const users = [alice, bob];
 
@@ -233,7 +234,7 @@ describe("Traversal + Prism = Traversal", () => {
 	// Focus: Maybe<number>[] → each Maybe (Traversal) → number inside Just (Prism)
 	const eachMaybe = Traversal.each<Maybe<number>>();
 	const justPrism = Prism._just<number>();
-	const justValues = pipe(eachMaybe, Traversal.compose(justPrism));
+	const justValues = compose(justPrism)(eachMaybe);
 
 	const data: Maybe<number>[] = [M.just(1), M.nothing(), M.just(3), M.nothing(), M.just(5)];
 
@@ -282,7 +283,7 @@ describe("Real-world: deep mixed composition", () => {
 	const eachScore = Traversal.each<number>();
 
 	// Lens<User, number[]> + Traversal<number[], number> = Traversal<User, number>
-	const userScores = pipe(scoresLens, Lens.compose(eachScore));
+	const userScores = compose(eachScore)(scoresLens);
 
 	// Modify all of alice's scores
 	it("modify all scores of a single user", () => {
@@ -294,7 +295,7 @@ describe("Real-world: deep mixed composition", () => {
 	// Lens + Prism: lens to email, prism into Just
 	const emailLens = pipe(Lens.identity<User>(), Lens.prop("email"));
 	const justPrism = Prism._just<string>();
-	const userEmailStr = pipe(emailLens, Lens.compose(justPrism));
+	const userEmailStr = compose(justPrism)(emailLens);
 
 	it("preview email for users who have one", () => {
 		expect(userEmailStr.preview(alice)).toEqual(M.just("alice@example.com"));
@@ -303,10 +304,7 @@ describe("Real-world: deep mixed composition", () => {
 
 	// Combine: get the first score of each user (Traversal + Prism via index)
 	const firstScore = Prism.index<number>(0);
-	const eachUsersFirstScore = pipe(
-		pipe(eachUser, Traversal.compose(scoresLens)),
-		Traversal.compose(firstScore),
-	);
+	const eachUsersFirstScore = compose(firstScore)(compose(scoresLens)(eachUser));
 
 	it("collect first score of each user (may be missing for empty scores)", () => {
 		const users = [alice, bob, { ...alice, scores: [] }];
@@ -327,7 +325,7 @@ describe("Real-world: deep mixed composition", () => {
 
 describe("Iso + Iso = Iso", () => {
 	// celsiusToFahrenheit: number ↔ number, then reverse it back
-	const identity = pipe(celsiusToFahrenheit, Iso.compose(Iso.reverse(celsiusToFahrenheit)));
+	const identity = compose(Iso.reverse(celsiusToFahrenheit))(celsiusToFahrenheit);
 
 	it("to is identity", () => {
 		for (const n of [0, 100, -40]) {
@@ -356,7 +354,7 @@ describe("Iso + Lens = Lens", () => {
 		(n) =>
 			([, s]) => [n, s],
 	);
-	const pairFst = pipe(pairToTuple, Iso.compose(fstLens));
+	const pairFst = compose(fstLens)(pairToTuple);
 
 	it("get extracts fst through the Iso", () => {
 		expect(pairFst.get({ fst: 42, snd: "hello" })).toBe(42);
@@ -390,7 +388,7 @@ describe("Iso + Prism = Prism", () => {
 		(v) => ({ sign: "pos", value: v }),
 	);
 
-	const positiveMagnitude = pipe(numToTagged, Iso.compose(positiveF));
+	const positiveMagnitude = compose(positiveF)(numToTagged);
 
 	it("preview succeeds when Prism matches", () => {
 		expect(positiveMagnitude.preview(5)).toEqual(M.just(5));
@@ -412,7 +410,7 @@ describe("Iso + Traversal = Traversal", () => {
 		(arr) => arr.map((n) => n * 1),
 	);
 	const eachNum = Traversal.each<number>();
-	const isoThenEach = pipe(arrIso, Iso.compose(eachNum));
+	const isoThenEach = compose(eachNum)(arrIso);
 
 	it("toArray collects all foci through the Iso", () => {
 		expect(isoThenEach.toArray([1, 2, 3])).toEqual([1, 2, 3]);

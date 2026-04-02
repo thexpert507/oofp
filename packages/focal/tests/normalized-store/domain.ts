@@ -1,10 +1,11 @@
 import { pipe } from "@oofp/core/pipe";
-import * as Lens from "../../lib/lens.ts";
-import * as Prism from "../../lib/prism.ts";
-import * as Traversal from "../../lib/traversal.ts";
+import * as Focal from "../../lib/focal/index.ts";
 
 import type {
+	CertificationEntity,
+	EducationEntity,
 	IncludedEntity,
+	LanguageEntity,
 	NormalizedStoreResponse,
 	PositionEntity,
 	PositionGroupEntity,
@@ -13,44 +14,51 @@ import type {
 } from "./types.ts";
 
 // ============================================================================
-// Prisms for discriminating the polymorphic union by $type
+// Partial matcher — fixed on IncludedEntity's discriminant key "$type".
+// Create it once; use it to build every entity focal without repeating
+// the type param or the tag key.
 // ============================================================================
 
-const IncludedEntityMatcher = Prism.match<IncludedEntity>();
+const byType = Focal.match<IncludedEntity>()("$type");
 
-export const profilePrism = IncludedEntityMatcher(
-	"$type",
-	"com.linkedin.voyager.dash.identity.profile.Profile",
+// ============================================================================
+// Focals for a single IncludedEntity — Focal<Prism, IncludedEntity, NarrowedType>
+// Used for preview on a single entity or as building blocks via Focal.compose.
+// ============================================================================
+
+export const profileFocal = pipe(
+	Focal.from<IncludedEntity>(),
+	byType("com.linkedin.voyager.dash.identity.profile.Profile"),
 );
 
-export const positionPrism = IncludedEntityMatcher(
-	"$type",
-	"com.linkedin.voyager.dash.identity.profile.Position",
+export const positionFocal = pipe(
+	Focal.from<IncludedEntity>(),
+	byType("com.linkedin.voyager.dash.identity.profile.Position"),
 );
 
-export const positionGroupPrism = IncludedEntityMatcher(
-	"$type",
-	"com.linkedin.voyager.dash.identity.profile.PositionGroup",
+export const positionGroupFocal = pipe(
+	Focal.from<IncludedEntity>(),
+	byType("com.linkedin.voyager.dash.identity.profile.PositionGroup"),
 );
 
-export const skillPrism = IncludedEntityMatcher(
-	"$type",
-	"com.linkedin.voyager.dash.identity.profile.Skill",
+export const skillFocal = pipe(
+	Focal.from<IncludedEntity>(),
+	byType("com.linkedin.voyager.dash.identity.profile.Skill"),
 );
 
-export const certificationPrism = IncludedEntityMatcher(
-	"$type",
-	"com.linkedin.voyager.dash.identity.profile.Certification",
+export const certificationFocal = pipe(
+	Focal.from<IncludedEntity>(),
+	byType("com.linkedin.voyager.dash.identity.profile.Certification"),
 );
 
-export const languagePrism = IncludedEntityMatcher(
-	"$type",
-	"com.linkedin.voyager.dash.identity.profile.Language",
+export const languageFocal = pipe(
+	Focal.from<IncludedEntity>(),
+	byType("com.linkedin.voyager.dash.identity.profile.Language"),
 );
 
-export const educationPrism = IncludedEntityMatcher(
-	"$type",
-	"com.linkedin.voyager.dash.identity.profile.Education",
+export const educationFocal = pipe(
+	Focal.from<IncludedEntity>(),
+	byType("com.linkedin.voyager.dash.identity.profile.Education"),
 );
 
 // ============================================================================
@@ -70,93 +78,83 @@ export type CandidateProfile = {
 };
 
 // ============================================================================
-// Helper and mapping function
+// Mapping function
 // ============================================================================
-
-export function collectEntities<T extends IncludedEntity>(
-	included: IncludedEntity[],
-	prism: Prism.Prism<IncludedEntity, T>,
-): T[] {
-	return pipe(
-		pipe(Traversal.each<IncludedEntity>(), Traversal.compose(prism)),
-		Traversal.collect(included),
-	);
-}
 
 export function toCandidateProfile(response: NormalizedStoreResponse): CandidateProfile {
 	const { included } = response;
 
-	// Extract typed entities
-	const profiles = collectEntities(included, profilePrism);
-	const positionGroups = collectEntities(included, positionGroupPrism);
-	const certifications = collectEntities(included, certificationPrism);
-	const languages = collectEntities(included, languagePrism);
-	const educations = collectEntities(included, educationPrism);
+	// Helper: traverse included[], keep only entities of the given focal's type
+	const allOf = <T extends IncludedEntity>(focal: Focal.Focal<"Prism", IncludedEntity, T>): T[] =>
+		pipe(Focal.fromEach<IncludedEntity>(), Focal.compose(focal), Focal.collect(included));
 
-	const mainProfile = profiles[0];
+	const profiles = allOf(profileFocal);
+	const positionGroups = allOf(positionGroupFocal);
+	const positions = allOf(positionFocal);
+	const rawSkills = allOf(skillFocal);
+	const certifications = allOf(certificationFocal);
+	const languages = allOf(languageFocal);
+	const educations = allOf(educationFocal);
+
+	const mainProfile = profiles[0] ?? null;
 
 	// name
-	const firstNameLens = pipe(Lens.identity<ProfileEntity>(), Lens.prop("firstName"));
-	const lastNameLens = pipe(Lens.identity<ProfileEntity>(), Lens.prop("lastName"));
 	const name = mainProfile
-		? `${pipe(firstNameLens, Lens.view(mainProfile))} ${pipe(lastNameLens, Lens.view(mainProfile))}`
+		? `${pipe(Focal.from<ProfileEntity>(), Focal.prop("firstName"), Focal.get(mainProfile))} ${pipe(Focal.from<ProfileEntity>(), Focal.prop("lastName"), Focal.get(mainProfile))}`
 		: "";
 
-	// summary
-	const summaryLens = pipe(Lens.identity<ProfileEntity>(), Lens.prop("multiLocaleSummary"));
-	const summaryRecord = mainProfile ? pipe(summaryLens, Lens.view(mainProfile)) : null;
-	const summary = summaryRecord?.["en_US"] ?? null;
+	// summary — en_US locale
+	const summary = mainProfile
+		? (pipe(
+				Focal.from<ProfileEntity>(),
+				Focal.prop("multiLocaleSummary"),
+				Focal.get(mainProfile),
+			)?.["en_US"] ?? null)
+		: null;
 
 	// currentEmployer — companyName of the first PositionGroup
-	const firstGroupCompanyLens = pipe(
-		Lens.identity<PositionGroupEntity>(),
-		Lens.prop("companyName"),
-	);
 	const currentEmployer =
 		positionGroups.length > 0
-			? (pipe(firstGroupCompanyLens, Lens.view(positionGroups[0])) ?? null)
+			? (pipe(
+					Focal.from<PositionGroupEntity>(),
+					Focal.prop("companyName"),
+					Focal.get(positionGroups[0]),
+				) ?? null)
 			: null;
 
-	// jobTitles — all title values from Position entities
-	const titleLens = pipe(Lens.identity<PositionEntity>(), Lens.prop("title"));
+	// jobTitles — title from every Position entity
 	const jobTitles = pipe(
-		pipe(Traversal.each<IncludedEntity>(), Traversal.compose(positionPrism)),
-		Traversal.compose(titleLens),
-		Traversal.collect(included),
+		Focal.fromEach<PositionEntity>(),
+		Focal.prop("title"),
+		Focal.collect(positions),
 	);
 
-	// employers — all companyName values from PositionGroup entities
-	const groupCompanyLens = pipe(Lens.identity<PositionGroupEntity>(), Lens.prop("companyName"));
+	// employers — companyName from every PositionGroup entity
 	const employers = pipe(
-		pipe(Traversal.each<IncludedEntity>(), Traversal.compose(positionGroupPrism)),
-		Traversal.compose(groupCompanyLens),
-		Traversal.collect(included),
-	).filter((name): name is string => name !== undefined);
+		Focal.fromEach<PositionGroupEntity>(),
+		Focal.prop("companyName"),
+		Focal.collect(positionGroups),
+	).filter((n): n is string => n !== undefined);
 
-	// skills — all name values from Skill entities
-	const skillNameLens = pipe(Lens.identity<SkillEntity>(), Lens.prop("name"));
-	const skillNames = pipe(
-		pipe(Traversal.each<IncludedEntity>(), Traversal.compose(skillPrism)),
-		Traversal.compose(skillNameLens),
-		Traversal.collect(included),
-	);
+	// skills — name from every Skill entity
+	const skills = pipe(Focal.fromEach<SkillEntity>(), Focal.prop("name"), Focal.collect(rawSkills));
 
 	// certifications
-	const certifications_mapped = certifications.map((c) => ({
-		name: c.name,
-		issuer: c.authority,
+	const certificationsMapped = certifications.map((c) => ({
+		name: pipe(Focal.from<CertificationEntity>(), Focal.prop("name"), Focal.get(c)),
+		issuer: pipe(Focal.from<CertificationEntity>(), Focal.prop("authority"), Focal.get(c)),
 	}));
 
 	// languages
-	const languages_mapped = languages.map((l) => ({
-		name: l.name,
-		proficiency: l.proficiency,
+	const languagesMapped = languages.map((l) => ({
+		name: pipe(Focal.from<LanguageEntity>(), Focal.prop("name"), Focal.get(l)),
+		proficiency: pipe(Focal.from<LanguageEntity>(), Focal.prop("proficiency"), Focal.get(l)),
 	}));
 
 	// education
-	const education_mapped = educations.map((ed) => ({
-		school: ed.schoolName,
-		field: ed.fieldOfStudy,
+	const educationMapped = educations.map((ed) => ({
+		school: pipe(Focal.from<EducationEntity>(), Focal.prop("schoolName"), Focal.get(ed)),
+		field: pipe(Focal.from<EducationEntity>(), Focal.prop("fieldOfStudy"), Focal.get(ed)),
 	}));
 
 	return {
@@ -165,9 +163,9 @@ export function toCandidateProfile(response: NormalizedStoreResponse): Candidate
 		currentEmployer: currentEmployer ?? null,
 		jobTitles,
 		employers,
-		skills: skillNames,
-		certifications: certifications_mapped,
-		languages: languages_mapped,
-		education: education_mapped,
+		skills,
+		certifications: certificationsMapped,
+		languages: languagesMapped,
+		education: educationMapped,
 	};
 }

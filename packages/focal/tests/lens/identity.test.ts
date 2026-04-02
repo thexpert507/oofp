@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
 import { pipe } from "@oofp/core/pipe";
-import { prop, identity, compose } from "../../lib/lens.ts";
+import { describe, expect, it } from "vitest";
+import { compose } from "../../lib/compose.ts";
+import { identity, prop } from "../../lib/lens.ts";
 import { type Person, alice } from "./fixtures.ts";
 
 describe("identity Lens", () => {
@@ -17,7 +18,7 @@ describe("identity Lens", () => {
 
 	it("composing with identity on the left is a no-op", () => {
 		const ageLens = pipe(identity<Person>(), prop("age"));
-		const composed = pipe(identity<Person>(), compose(ageLens));
+		const composed = compose(ageLens)(identity<Person>());
 
 		expect(composed.get(alice)).toBe(ageLens.get(alice));
 		expect(composed.set(99)(alice)).toEqual(ageLens.set(99)(alice));
@@ -25,7 +26,7 @@ describe("identity Lens", () => {
 
 	it("composing with identity on the right is a no-op", () => {
 		const ageLens = pipe(identity<Person>(), prop("age"));
-		const composed = pipe(ageLens, compose(identity<number>()));
+		const composed = compose(identity<number>())(ageLens);
 
 		expect(composed.get(alice)).toBe(ageLens.get(alice));
 		expect(composed.set(99)(alice)).toEqual(ageLens.set(99)(alice));

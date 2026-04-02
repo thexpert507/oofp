@@ -1,97 +1,86 @@
 /**
  * Normalized store — optics integration tests.
  *
- * Demonstrates Lens / Prism / Traversal applied to a real-world polymorphic
+ * Demonstrates the Focal fluent API applied to a real-world polymorphic
  * normalized store API response, including:
  *
- *  1. Prism.match  — filter by $type discriminant
- *  2. Lens.prop    — deep immutable access
- *  3. Traversal.each + Lens — collect across all entities of a type
- *  4. Traversal.filtered — selective traversal
- *  5. Prism.index  — safe array element access
+ *  1. Focal.match  — filter by $type discriminant
+ *  2. Focal.prop   — deep immutable access
+ *  3. Focal.fromEach + match + prop — collect across all entities of a type
+ *  4. Focal.filter — selective traversal
+ *  5. Focal.index  — safe array element access
  *  6. Domain mapping — NormalizedStoreResponse → CandidateProfile
  */
 
-import { describe, it, expect } from "vitest";
-import { pipe } from "@oofp/core/pipe";
 import * as M from "@oofp/core/maybe";
-import * as Lens from "../../lib/lens.ts";
-import * as Prism from "../../lib/prism.ts";
-import * as Traversal from "../../lib/traversal.ts";
+import { pipe } from "@oofp/core/pipe";
+import { describe, expect, it } from "vitest";
+import * as Focal from "../../lib/focal/index.ts";
 
-import type {
-	IncludedEntity,
-	ProfileEntity,
-	PositionEntity,
-	PositionGroupEntity,
-	SkillEntity,
-	CertificationEntity,
-} from "./types.ts";
+import type { CertificationEntity, IncludedEntity, PositionEntity, SkillEntity } from "./types.ts";
 
 import {
-	profilePrism,
-	positionPrism,
-	positionGroupPrism,
-	skillPrism,
-	certificationPrism,
-	toCandidateProfile,
 	type CandidateProfile,
+	certificationFocal,
+	positionFocal,
+	positionGroupFocal,
+	skillFocal,
+	toCandidateProfile,
 } from "./domain.ts";
 
 import { candidateProfileResponse } from "./fixtures.ts";
 
 // ============================================================================
-// 1. Prism.match — filter by $type
+// 1. Focal.match — filter by $type
 // ============================================================================
 
-describe("Prism.match — filter by $type", () => {
+describe("Focal.match — filter by $type", () => {
 	const { included } = candidateProfileResponse;
 
 	const firstSkill = included.find(
 		(e) => e.$type === "com.linkedin.voyager.dash.identity.profile.Skill",
-	) as SkillEntity;
+	) as IncludedEntity;
 
 	const firstCollectionResponse = included.find(
 		(e) => e.$type === "com.linkedin.restli.common.CollectionResponse",
 	) as IncludedEntity;
 
 	it("preview returns Just for a matching Skill entity", () => {
-		expect(skillPrism.preview(firstSkill)).toEqual(M.just(firstSkill));
+		expect(pipe(skillFocal, Focal.preview(firstSkill))).toEqual(M.just(firstSkill));
 	});
 
 	it("preview returns Nothing for a non-matching entity", () => {
-		expect(skillPrism.preview(firstCollectionResponse)).toEqual(M.nothing());
+		expect(pipe(skillFocal, Focal.preview(firstCollectionResponse))).toEqual(M.nothing());
 	});
 
 	it("preview returns Just for a matching Certification entity", () => {
 		const cert = included.find(
 			(e) => e.$type === "com.linkedin.voyager.dash.identity.profile.Certification",
-		) as CertificationEntity;
-		expect(certificationPrism.preview(cert)).toEqual(M.just(cert));
+		) as IncludedEntity;
+		expect(pipe(certificationFocal, Focal.preview(cert))).toEqual(M.just(cert));
 	});
 
-	it("positionPrism.preview returns Nothing for a CollectionResponse", () => {
-		expect(positionPrism.preview(firstCollectionResponse)).toEqual(M.nothing());
+	it("positionFocal.preview returns Nothing for a CollectionResponse", () => {
+		expect(pipe(positionFocal, Focal.preview(firstCollectionResponse))).toEqual(M.nothing());
 	});
 
-	it("collect all skills via Traversal.each + Traversal.compose(skillPrism)", () => {
-		const allSkillsTraversal = pipe(
-			Traversal.each<IncludedEntity>(),
-			Traversal.compose(skillPrism),
+	it("collect all skills via fromEach + compose(skillFocal)", () => {
+		const skills = pipe(
+			Focal.fromEach<IncludedEntity>(),
+			Focal.compose(skillFocal),
+			Focal.collect(included),
 		);
-		const skills = pipe(allSkillsTraversal, Traversal.collect(included));
 		expect(skills).toHaveLength(5);
 		expect(skills.map((s) => s.name)).toContain("Scrum");
 		expect(skills.map((s) => s.name)).toContain("Artificial Intelligence (AI)");
 	});
 
 	it("collect does not include CollectionResponse entities", () => {
-		const allSkillsTraversal = pipe(
-			Traversal.each<IncludedEntity>(),
-			Traversal.compose(skillPrism),
+		const skills = pipe(
+			Focal.fromEach<IncludedEntity>(),
+			Focal.compose(skillFocal),
+			Focal.collect(included),
 		);
-		const skills = pipe(allSkillsTraversal, Traversal.collect(included));
-		// All returned items must be skills
 		skills.forEach((s) => {
 			expect(s.$type).toBe("com.linkedin.voyager.dash.identity.profile.Skill");
 		});
@@ -99,58 +88,63 @@ describe("Prism.match — filter by $type", () => {
 });
 
 // ============================================================================
-// 2. Lens.prop — deep immutable access
+// 2. Focal.prop — deep immutable access
 // ============================================================================
 
-describe("Lens.prop — deep immutable access", () => {
+describe("Focal.prop — deep immutable access", () => {
 	const profile = candidateProfileResponse.included.find(
 		(e) => e.$type === "com.linkedin.voyager.dash.identity.profile.Profile",
-	) as ProfileEntity;
-
-	const firstNameLens = pipe(
-		Lens.identity<ProfileEntity>(),
-		Lens.prop("firstName"),
-	);
-
-	const lastNameLens = pipe(
-		Lens.identity<ProfileEntity>(),
-		Lens.prop("lastName"),
-	);
+	) as import("./types.ts").ProfileEntity;
 
 	it("reads firstName", () => {
-		expect(pipe(firstNameLens, Lens.view(profile))).toBe("Jose");
+		const firstName = pipe(
+			Focal.from<typeof profile>(),
+			Focal.prop("firstName"),
+			Focal.get(profile),
+		);
+		expect(firstName).toBe("Jose");
 	});
 
 	it("reads lastName", () => {
-		expect(pipe(lastNameLens, Lens.view(profile))).toBe("Cruset");
+		const lastName = pipe(Focal.from<typeof profile>(), Focal.prop("lastName"), Focal.get(profile));
+		expect(lastName).toBe("Cruset");
 	});
 
 	it("set firstName produces a new object", () => {
-		const updated = pipe(firstNameLens, Lens.set("Joseph"))(profile);
+		const updated = pipe(
+			Focal.from<typeof profile>(),
+			Focal.prop("firstName"),
+			Focal.set("Joseph"),
+			Focal.run(profile),
+		);
 		expect(updated.firstName).toBe("Joseph");
 		expect(updated.lastName).toBe("Cruset");
 	});
 
 	it("set does not mutate the original", () => {
-		pipe(firstNameLens, Lens.set("ShouldNotPersist"))(profile);
+		pipe(
+			Focal.from<typeof profile>(),
+			Focal.prop("firstName"),
+			Focal.set("ShouldNotPersist"),
+			Focal.run(profile),
+		);
 		expect(profile.firstName).toBe("Jose");
 	});
 
-	it("reads nested profilePicture artifact width via Prism._just + Prism.index", () => {
-		const pictureLens = pipe(
-			Lens.identity<ProfileEntity>(),
-			Lens.prop("profilePicture"),
+	it("reads nested profilePicture artifact width via Focal.index", () => {
+		const picture = pipe(
+			Focal.from<typeof profile>(),
+			Focal.prop("profilePicture"),
+			Focal.get(profile),
 		);
 
-		const pictureValue = pipe(pictureLens, Lens.view(profile));
+		if (picture === null) throw new Error("Expected profilePicture to be non-null");
 
-		if (pictureValue === null) throw new Error("Expected profilePicture to be non-null");
-
-		const artifacts = pictureValue.displayImageReference.vectorImage.artifacts;
-		// Safely access the first artifact using Prism.index
+		const artifacts = picture.displayImageReference.vectorImage.artifacts;
 		const firstArtifact = pipe(
-			Prism.index<(typeof artifacts)[number]>(0),
-			Prism.preview(artifacts),
+			Focal.from<typeof artifacts>(),
+			Focal.index(0),
+			Focal.preview(artifacts),
 		);
 		expect(M.isJust(firstArtifact)).toBe(true);
 		if (M.isJust(firstArtifact)) {
@@ -159,28 +153,46 @@ describe("Lens.prop — deep immutable access", () => {
 	});
 
 	it("satisfies GetPut law for firstName", () => {
-		expect(firstNameLens.set(firstNameLens.get(profile))(profile)).toEqual(profile);
+		const firstName = pipe(
+			Focal.from<typeof profile>(),
+			Focal.prop("firstName"),
+			Focal.get(profile),
+		);
+		const restored = pipe(
+			Focal.from<typeof profile>(),
+			Focal.prop("firstName"),
+			Focal.set(firstName),
+			Focal.run(profile),
+		);
+		expect(restored).toEqual(profile);
 	});
 
 	it("satisfies PutGet law for lastName", () => {
-		expect(lastNameLens.get(lastNameLens.set("Updated")(profile))).toBe("Updated");
+		const updated = pipe(
+			Focal.from<typeof profile>(),
+			Focal.prop("lastName"),
+			Focal.set("Updated"),
+			Focal.run(profile),
+		);
+		const lastName = pipe(Focal.from<typeof updated>(), Focal.prop("lastName"), Focal.get(updated));
+		expect(lastName).toBe("Updated");
 	});
 });
 
 // ============================================================================
-// 3. Traversal.each + Lens — collect across all entities
+// 3. fromEach + match + prop — collect across all entities
 // ============================================================================
 
-describe("Traversal.each + Lens — collect across all entities of a type", () => {
+describe("fromEach + match + prop — collect across all entities of a type", () => {
 	const { included } = candidateProfileResponse;
 
 	it("collects all position titles", () => {
-		const titleLens = pipe(Lens.identity<PositionEntity>(), Lens.prop("title"));
-		const allTitles = pipe(
-			pipe(Traversal.each<IncludedEntity>(), Traversal.compose(positionPrism)),
-			Traversal.compose(titleLens),
+		const titles = pipe(
+			Focal.fromEach<IncludedEntity>(),
+			Focal.compose(positionFocal),
+			Focal.prop("title"),
+			Focal.collect(included),
 		);
-		const titles = pipe(allTitles, Traversal.collect(included));
 		expect(titles).toEqual([
 			"Founder & Chief Technology Officer",
 			"Chief Technology Officer",
@@ -189,31 +201,29 @@ describe("Traversal.each + Lens — collect across all entities of a type", () =
 	});
 
 	it("collects all positionGroup company names", () => {
-		const companyNameLens = pipe(
-			Lens.identity<PositionGroupEntity>(),
-			Lens.prop("companyName"),
+		const companies = pipe(
+			Focal.fromEach<IncludedEntity>(),
+			Focal.compose(positionGroupFocal),
+			Focal.prop("companyName"),
+			Focal.collect(included),
 		);
-		const allCompanies = pipe(
-			pipe(Traversal.each<IncludedEntity>(), Traversal.compose(positionGroupPrism)),
-			Traversal.compose(companyNameLens),
-		);
-		const companies = pipe(allCompanies, Traversal.collect(included));
-		// Three PositionGroups have companyName defined
 		expect(companies).toContain("Alfa AI & Blockchain");
 		expect(companies).toContain("Waicont Systems");
 		expect(companies).toContain("Telio Group");
 	});
 
 	it("modifies all skill names to uppercase", () => {
-		const nameLens = pipe(Lens.identity<SkillEntity>(), Lens.prop("name"));
-		const allSkillNames = pipe(
-			pipe(Traversal.each<IncludedEntity>(), Traversal.compose(skillPrism)),
-			Traversal.compose(nameLens),
+		const modified = pipe(
+			Focal.fromEach<IncludedEntity>(),
+			Focal.compose(skillFocal),
+			Focal.prop("name"),
+			Focal.modify((n: string) => n.toUpperCase()),
+			Focal.run(included),
 		);
-		const modified = pipe(allSkillNames, Traversal.modify((n: string) => n.toUpperCase()))(included);
 		const skills = pipe(
-			pipe(Traversal.each<IncludedEntity>(), Traversal.compose(skillPrism)),
-			Traversal.collect(modified),
+			Focal.fromEach<IncludedEntity>(),
+			Focal.compose(skillFocal),
+			Focal.collect(modified),
 		);
 		skills.forEach((s) => {
 			expect(s.name).toBe(s.name.toUpperCase());
@@ -221,64 +231,61 @@ describe("Traversal.each + Lens — collect across all entities of a type", () =
 	});
 
 	it("modification does not affect non-skill entities", () => {
-		const nameLens = pipe(Lens.identity<SkillEntity>(), Lens.prop("name"));
-		const allSkillNames = pipe(
-			pipe(Traversal.each<IncludedEntity>(), Traversal.compose(skillPrism)),
-			Traversal.compose(nameLens),
+		const modified = pipe(
+			Focal.fromEach<IncludedEntity>(),
+			Focal.compose(skillFocal),
+			Focal.prop("name"),
+			Focal.modify((n: string) => n.toUpperCase()),
+			Focal.run(included),
 		);
-		const modified = pipe(allSkillNames, Traversal.modify((n: string) => n.toUpperCase()))(included);
 		const profileAfter = modified.find(
 			(e) => e.$type === "com.linkedin.voyager.dash.identity.profile.Profile",
-		) as ProfileEntity;
-		// firstName should be unchanged
+		) as import("./types.ts").ProfileEntity;
 		expect(profileAfter.firstName).toBe("Jose");
 	});
 });
 
 // ============================================================================
-// 4. Traversal.filtered — selective traversal
+// 4. Focal.filter — selective traversal
 // ============================================================================
 
-describe("Traversal.filtered — selective traversal", () => {
+describe("Focal.filter — selective traversal", () => {
 	const { included } = candidateProfileResponse;
 
 	const positions = included.filter(
-		(e): e is PositionEntity =>
-			e.$type === "com.linkedin.voyager.dash.identity.profile.Position",
+		(e): e is PositionEntity => e.$type === "com.linkedin.voyager.dash.identity.profile.Position",
 	);
 
-	it("toArray only returns positions with a non-null description", () => {
-		const withDescription = Traversal.filtered<PositionEntity>(
-			(p) => p.description !== null,
+	it("collect only returns positions with a non-null description", () => {
+		const result = pipe(
+			Focal.fromEach<PositionEntity>(),
+			Focal.filter((p) => p.description !== null),
+			Focal.collect(positions),
 		);
-		const result = pipe(withDescription, Traversal.collect(positions));
 		expect(result.length).toBeGreaterThan(0);
 		result.forEach((p) => expect(p.description).not.toBeNull());
 	});
 
-	it("toArray does not return positions with null description", () => {
-		const withDescription = Traversal.filtered<PositionEntity>(
-			(p) => p.description !== null,
+	it("collect does not return positions with null description", () => {
+		const result = pipe(
+			Focal.fromEach<PositionEntity>(),
+			Focal.filter((p) => p.description !== null),
+			Focal.collect(positions),
 		);
-		const result = pipe(withDescription, Traversal.collect(positions));
 		const nullDescPositions = positions.filter((p) => p.description === null);
 		nullDescPositions.forEach((np) => {
 			expect(result).not.toContainEqual(np);
 		});
 	});
 
-	it("set on filtered traversal only affects matching positions", () => {
-		const withDescription = Traversal.filtered<PositionEntity>(
-			(p) => p.description !== null,
-		);
-
+	it("set on filtered focal only affects matching positions", () => {
 		const sentinel = "CLEARED";
-		const modified = pipe(withDescription, Traversal.set(
-			{ ...positions[0], description: sentinel } as PositionEntity,
-		))(positions);
-
-		// Positions that had a description are now replaced with the sentinel object
-		// Positions that had null description are unchanged
+		const modified = pipe(
+			Focal.fromEach<PositionEntity>(),
+			Focal.filter((p) => p.description !== null),
+			Focal.set({ ...positions[0], description: sentinel } as PositionEntity),
+			Focal.run(positions),
+		);
 		const nullDescPositions = positions.filter((p) => p.description === null);
 		nullDescPositions.forEach((original) => {
 			const found = modified.find((p) => p.entityUrn === original.entityUrn);
@@ -286,24 +293,26 @@ describe("Traversal.filtered — selective traversal", () => {
 		});
 	});
 
-	it("satisfies Identity law on filtered traversal", () => {
-		const withDescription = Traversal.filtered<PositionEntity>(
-			(p) => p.description !== null,
+	it("satisfies Identity law on filtered focal", () => {
+		const result = pipe(
+			Focal.fromEach<PositionEntity>(),
+			Focal.filter((p) => p.description !== null),
+			Focal.modify((x) => x),
+			Focal.run(positions),
 		);
-		expect(pipe(withDescription, Traversal.modify((x) => x))(positions)).toEqual(positions);
+		expect(result).toEqual(positions);
 	});
 });
 
 // ============================================================================
-// 5. Prism.index — safe array element access
+// 5. Focal.index — safe array element access
 // ============================================================================
 
-describe("Prism.index — safe array element access", () => {
+describe("Focal.index — safe array element access", () => {
 	const { included } = candidateProfileResponse;
 
 	const skills = included.filter(
-		(e): e is SkillEntity =>
-			e.$type === "com.linkedin.voyager.dash.identity.profile.Skill",
+		(e): e is SkillEntity => e.$type === "com.linkedin.voyager.dash.identity.profile.Skill",
 	);
 
 	const certifications = included.filter(
@@ -311,37 +320,37 @@ describe("Prism.index — safe array element access", () => {
 			e.$type === "com.linkedin.voyager.dash.identity.profile.Certification",
 	);
 
-	it("Prism.index(0) returns Just with the first skill", () => {
-		const result = pipe(Prism.index<SkillEntity>(0), Prism.preview(skills));
+	it("index(0) returns Just with the first skill", () => {
+		const result = pipe(Focal.from<SkillEntity[]>(), Focal.index(0), Focal.preview(skills));
 		expect(M.isJust(result)).toBe(true);
 		if (M.isJust(result)) {
 			expect(result.value.name).toBe("Scrum");
 		}
 	});
 
-	it("Prism.index(999) returns Nothing safely", () => {
-		const result = pipe(Prism.index<SkillEntity>(999), Prism.preview(skills));
+	it("index(999) returns Nothing safely", () => {
+		const result = pipe(Focal.from<SkillEntity[]>(), Focal.index(999), Focal.preview(skills));
 		expect(result).toEqual(M.nothing());
 	});
 
-	it("chains Prism.index(0) with Lens.prop to get first certification name", () => {
-		const nameLens = pipe(Lens.identity<CertificationEntity>(), Lens.prop("name"));
-		const firstCertName = pipe(
-			Prism.index<CertificationEntity>(0),
-			Prism.compose(nameLens),
+	it("chains index(0) + prop to get first certification name", () => {
+		const result = pipe(
+			Focal.from<CertificationEntity[]>(),
+			Focal.index(0),
+			Focal.prop("name"),
+			Focal.preview(certifications),
 		);
-		const result = pipe(firstCertName, Prism.preview(certifications));
 		expect(result).toEqual(M.just("Professional Scrum Product Owner (PSPO)"));
 	});
 
-	it("Prism.index on an empty array returns Nothing", () => {
+	it("index on an empty array returns Nothing", () => {
 		const empty: SkillEntity[] = [];
-		const result = pipe(Prism.index<SkillEntity>(0), Prism.preview(empty));
+		const result = pipe(Focal.from<SkillEntity[]>(), Focal.index(0), Focal.preview(empty));
 		expect(result).toEqual(M.nothing());
 	});
 
-	it("Prism.index(1) returns the second skill", () => {
-		const result = pipe(Prism.index<SkillEntity>(1), Prism.preview(skills));
+	it("index(1) returns the second skill", () => {
+		const result = pipe(Focal.from<SkillEntity[]>(), Focal.index(1), Focal.preview(skills));
 		expect(M.isJust(result)).toBe(true);
 		if (M.isJust(result)) {
 			expect(result.value.name).toBe("Artificial Intelligence (AI)");
@@ -442,7 +451,10 @@ describe("Domain mapping — NormalizedStoreResponse → CandidateProfile", () =
 			],
 			languages: result.languages,
 			education: [
-				{ school: "IESE Business School - University of Navarra", field: "Business Administration" },
+				{
+					school: "IESE Business School - University of Navarra",
+					field: "Business Administration",
+				},
 				{ school: "Goethe University Frankfurt, Germany", field: "Business Administration" },
 			],
 		};

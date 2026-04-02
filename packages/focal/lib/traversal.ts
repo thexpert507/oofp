@@ -7,10 +7,18 @@
  *   Composition: modify(f)(modify(g)(s))    ≡ modify(x => f(g(x)))(s)
  */
 
-import * as M from "@oofp/core/maybe";
-import type { Lens } from "./lens.ts";
-import type { Prism } from "./prism.ts";
-import { prismModify } from "./prism.ts";
+// ---------------------------------------------------------------------------
+// URI — self-registration in the HKT registry
+// ---------------------------------------------------------------------------
+
+export const URI = "Traversal";
+export type URI = typeof URI;
+
+declare module "./hkt.ts" {
+	interface URItoKind<S, A> {
+		Traversal: Traversal<S, A>;
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Type
@@ -133,56 +141,3 @@ export const fold =
 	<S>(t: Traversal<S, A>) =>
 	(s: S): B =>
 		t.toArray(s).reduce(f, init);
-
-// ---------------------------------------------------------------------------
-// Composition
-// ---------------------------------------------------------------------------
-
-export function compose<A, B>(to: Traversal<A, B>): <S>(from: Traversal<S, A>) => Traversal<S, B>;
-export function compose<A, B>(to: Lens<A, B>): <S>(from: Traversal<S, A>) => Traversal<S, B>;
-export function compose<A, B>(to: Prism<A, B>): <S>(from: Traversal<S, A>) => Traversal<S, B>;
-export function compose<A, B>(
-	to: Traversal<A, B> | Lens<A, B> | Prism<A, B>,
-): <S>(from: Traversal<S, A>) => Traversal<S, B> {
-	return <S>(from: Traversal<S, A>) => {
-		if (to.tag === "Lens") {
-			const lens = to as Lens<A, B>;
-			return {
-				tag: "Traversal" as const,
-				modify: (f: (b: B) => B) => from.modify((a: A) => lens.set(f(lens.get(a)))(a)),
-				toArray: (s: S) => from.toArray(s).map(lens.get),
-			};
-		}
-		if (to.tag === "Prism") {
-			const prism = to as Prism<A, B>;
-			const cachedModify = prismModify(prism);
-			return {
-				tag: "Traversal" as const,
-				modify: (f: (b: B) => B) => from.modify(cachedModify(f)),
-				toArray: (s: S) => {
-					const result: B[] = [];
-					for (const a of from.toArray(s)) {
-						const mb = prism.preview(a);
-						if (M.isJust(mb)) result.push(mb.value);
-					}
-					return result;
-				},
-			};
-		}
-		// default: Traversal + Traversal
-		const inner = to as Traversal<A, B>;
-		return {
-			tag: "Traversal" as const,
-			modify: (f: (b: B) => B) => from.modify(inner.modify(f)),
-			toArray: (s: S) => {
-				const result: B[] = [];
-				for (const a of from.toArray(s)) {
-					for (const b of inner.toArray(a)) {
-						result.push(b);
-					}
-				}
-				return result;
-			},
-		};
-	};
-}

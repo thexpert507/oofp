@@ -16,6 +16,7 @@ export default defineConfig({
 				replacement: resolve(__dirname, "../focal/lib/traversal.ts"),
 			},
 			{ find: "@oofp/focal/iso", replacement: resolve(__dirname, "../focal/lib/iso.ts") },
+			{ find: "@oofp/focal/compose", replacement: resolve(__dirname, "../focal/lib/compose.ts") },
 			{ find: "@oofp/focal", replacement: resolve(__dirname, "../focal/lib/index.ts") },
 			{ find: "@oofp/core/pipe", replacement: resolve(__dirname, "../core/lib/pipe.ts") },
 			{ find: "@oofp/core/maybe", replacement: resolve(__dirname, "../core/lib/maybe.ts") },

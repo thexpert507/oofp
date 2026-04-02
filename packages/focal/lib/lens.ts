@@ -7,12 +7,21 @@
  *   PutPut:  set(b)(set(a)(s))     ≡ set(b)(s)   — setting twice is the same as setting once
  */
 
-import type { Prism } from "./prism.ts";
-import { prismModify } from "./prism.ts";
-import type { Traversal } from "./traversal.ts";
+// ---------------------------------------------------------------------------
+// URI — self-registration in the HKT registry
+// ---------------------------------------------------------------------------
+
+export const URI = "Lens";
+export type URI = typeof URI;
+
+declare module "./hkt.ts" {
+	interface URItoKind<S, A> {
+		Lens: Lens<S, A>;
+	}
+}
 
 // ---------------------------------------------------------------------------
-// Type
+// Type — minimal data, no embedded behaviour
 // ---------------------------------------------------------------------------
 
 export interface Lens<S, A> {
@@ -72,14 +81,11 @@ export const prop =
 	<S>(lens: Lens<S, A>): Lens<S, A[K]> => ({
 		tag: "Lens",
 		get: (s) => lens.get(s)[key],
-		set: (v) => (s) => {
-			const a = lens.get(s);
-			return lens.set({ ...a, [key]: v })(s);
-		},
+		set: (v) => (s) => lens.set({ ...lens.get(s), [key]: v })(s),
 	});
 
 // ---------------------------------------------------------------------------
-// Operations (lens flows through the pipe)
+// Operations — free functions, all logic lives here
 // ---------------------------------------------------------------------------
 
 /** Extract the focus from a value.
@@ -108,61 +114,11 @@ export const set =
 /** Modify the focus with a function, returning an updater `S => S`.
  *
  * ```ts
- * pipe(identity<Company>(), prop('ceo'), prop('age'), over(n => n + 1))(acme)
+ * pipe(identity<Company>(), prop('ceo'), prop('age'), modify(n => n + 1))(acme)
  * ```
  */
-export const over =
+export const modify =
 	<A>(f: (a: A) => A) =>
 	<S>(lens: Lens<S, A>) =>
 	(s: S): S =>
 		lens.set(f(lens.get(s)))(s);
-
-// ---------------------------------------------------------------------------
-// Composition (pipe-friendly, discriminates on to.tag)
-// ---------------------------------------------------------------------------
-
-export function compose<A, B>(to: Lens<A, B>): <S>(from: Lens<S, A>) => Lens<S, B>;
-export function compose<A, B>(to: Prism<A, B>): <S>(from: Lens<S, A>) => Prism<S, B>;
-export function compose<A, B>(to: Traversal<A, B>): <S>(from: Lens<S, A>) => Traversal<S, B>;
-export function compose<A, B>(
-	to: Lens<A, B> | Prism<A, B> | Traversal<A, B>,
-): <S>(from: Lens<S, A>) => Lens<S, B> | Prism<S, B> | Traversal<S, B> {
-	return <S>(from: Lens<S, A>) => {
-		if (to.tag === "Prism") {
-			const prism = to as Prism<A, B>;
-			return {
-				tag: "Prism" as const,
-				preview: (s: S) => prism.preview(from.get(s)),
-				review: (b: B) => from.set(prism.review(b))({} as S),
-				modify: (f: (b: B) => B) => (s: S) => {
-					const a = from.get(s);
-					const newA = prismModify(prism)(f)(a);
-					return from.set(newA)(s);
-				},
-			};
-		}
-		if (to.tag === "Traversal") {
-			const traversal = to as Traversal<A, B>;
-			return {
-				tag: "Traversal" as const,
-				modify: (f: (b: B) => B) => (s: S) => {
-					const a = from.get(s);
-					const newA = traversal.modify(f)(a);
-					return from.set(newA)(s);
-				},
-				toArray: (s: S) => traversal.toArray(from.get(s)),
-			};
-		}
-		// Lens (default)
-		const inner = to as Lens<A, B>;
-		return {
-			tag: "Lens" as const,
-			get: (s: S) => inner.get(from.get(s)),
-			set: (b: B) => (s: S) => {
-				const a = from.get(s);
-				const newA = inner.set(b)(a);
-				return from.set(newA)(s);
-			},
-		};
-	};
-}

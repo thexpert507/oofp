@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { pipe } from "@oofp/core/pipe";
 import * as M from "@oofp/core/maybe";
 import type { Maybe } from "@oofp/core/maybe";
-import { _just, preview, review, set, over } from "../../lib/prism.ts";
+import { pipe } from "@oofp/core/pipe";
+import { describe, expect, it } from "vitest";
+import { _just, modify, preview, review, set } from "../../lib/prism.ts";
 
-describe("preview / review / set / over (pipe-friendly)", () => {
+describe("preview / review / set / modify (pipe-friendly)", () => {
 	const p = _just<number>();
 
 	it("preview works with pipe — prism flows through", () => {
@@ -22,14 +22,20 @@ describe("preview / review / set / over (pipe-friendly)", () => {
 		expect(result).toEqual(M.just(42));
 	});
 
-	it("over modifies the focus when present", () => {
-		const result = pipe(p, over((n: number) => n * 2))(M.just(10));
+	it("modify modifies the focus when present", () => {
+		const result = pipe(
+			p,
+			modify((n: number) => n * 2),
+		)(M.just(10));
 		expect(result).toEqual(M.just(20));
 	});
 
-	it("over leaves the whole unchanged when focus is absent", () => {
+	it("modify leaves the whole unchanged when focus is absent", () => {
 		const nothing: Maybe<number> = M.nothing();
-		const result = pipe(p, over((n: number) => n * 2))(nothing);
+		const result = pipe(
+			p,
+			modify((n: number) => n * 2),
+		)(nothing);
 		expect(result).toEqual(M.nothing());
 	});
 

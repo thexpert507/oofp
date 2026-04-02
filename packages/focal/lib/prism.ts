@@ -11,18 +11,29 @@ import type { Either } from "@oofp/core/either";
 import * as E from "@oofp/core/either";
 import * as M from "@oofp/core/maybe";
 import type { Maybe } from "@oofp/core/maybe";
-import type { Lens } from "./lens.ts";
-import type { Traversal } from "./traversal.ts";
 
 // ---------------------------------------------------------------------------
-// Type
+// URI — self-registration in the HKT registry
+// ---------------------------------------------------------------------------
+
+export const URI = "Prism";
+export type URI = typeof URI;
+
+declare module "./hkt.ts" {
+	interface URItoKind<S, A> {
+		Prism: Prism<S, A>;
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Type — minimal data, no embedded behaviour
 // ---------------------------------------------------------------------------
 
 export interface Prism<S, A> {
 	readonly tag: "Prism";
 	readonly preview: (s: S) => Maybe<A>;
 	readonly review: (a: A) => S;
-	/** Override for container-like Prisms (e.g. `index`) where `review` can't preserve surrounding context. */
+	/** Optional modify override for Prisms where review(f(preview(s))) would be destructive (e.g. `index`). */
 	readonly modify?: (f: (a: A) => A) => (s: S) => S;
 }
 
@@ -30,7 +41,10 @@ export interface Prism<S, A> {
 // Constructors
 // ---------------------------------------------------------------------------
 
-/** Create a Prism from a preview and review function.
+/** Create a Prism from a preview and review function, with an optional modify override.
+ *
+ * The `modify` override is useful for "affine traversal" style Prisms where
+ * `review(f(preview(s)))` would be destructive or lose context (e.g. `index`, `optional`).
  *
  * ```ts
  * const intPrism = Prism.make(
@@ -39,54 +53,39 @@ export interface Prism<S, A> {
  * );
  * ```
  */
-export const make = <S, A>(preview: (s: S) => Maybe<A>, review: (a: A) => S): Prism<S, A> => ({
+export const make = <S, A>(
+	preview: (s: S) => Maybe<A>,
+	review: (a: A) => S,
+	modify?: (f: (a: A) => A) => (s: S) => S,
+): Prism<S, A> => ({
 	tag: "Prism",
 	preview,
 	review,
+	...(modify ? { modify } : {}),
 });
 
-/** Prism focusing on the Just branch of a Maybe<A>.
- *
- * ```ts
- * pipe(_just<number>(), preview(M.just(42))) // => Just(42)
- * ```
- */
+/** Prism focusing on the Just branch of a Maybe<A>. */
 export const _just = <A>(): Prism<Maybe<A>, A> => ({
 	tag: "Prism",
 	preview: (s) => s,
 	review: (a) => M.just(a),
 });
 
-/** Prism focusing on the Nothing branch of a Maybe<A>. Focus type is `void`.
- *
- * ```ts
- * pipe(_nothing<string>(), preview(M.nothing())) // => Just(undefined)
- * ```
- */
+/** Prism focusing on the Nothing branch of a Maybe<A>. Focus type is `void`. */
 export const _nothing = <A>(): Prism<Maybe<A>, void> => ({
 	tag: "Prism",
 	preview: (s) => (M.isNothing(s) ? M.just(undefined) : M.nothing()),
 	review: () => M.nothing(),
 });
 
-/** Prism focusing on the Right branch of an Either<L, A>.
- *
- * ```ts
- * pipe(_right<string, number>(), preview(E.right(42))) // => Just(42)
- * ```
- */
+/** Prism focusing on the Right branch of an Either<L, A>. */
 export const _right = <L, A>(): Prism<Either<L, A>, A> => ({
 	tag: "Prism",
 	preview: (s) => (E.isRight(s) ? M.just(s.value) : M.nothing()),
 	review: (a) => E.right(a),
 });
 
-/** Prism focusing on the Left branch of an Either<L, A>.
- *
- * ```ts
- * pipe(_left<string, number>(), preview(E.left("err"))) // => Just("err")
- * ```
- */
+/** Prism focusing on the Left branch of an Either<L, A>. */
 export const _left = <L, A>(): Prism<Either<L, A>, L> => ({
 	tag: "Prism",
 	preview: (s) => (E.isLeft(s) ? M.just(s.value) : M.nothing()),
@@ -94,11 +93,8 @@ export const _left = <L, A>(): Prism<Either<L, A>, L> => ({
 });
 
 /** Prism focusing on the element at index `i` of an array. Nothing if out of bounds.
- * Provides a `modify` override to preserve surrounding array elements.
  *
- * ```ts
- * pipe(index<number>(1), preview([10, 20, 30])) // => Just(20)
- * ```
+ * Note: `review` reconstructs a sparse array; use `modify` for in-place updates.
  */
 export const index = <A>(i: number): Prism<A[], A> => ({
 	tag: "Prism",
@@ -117,26 +113,18 @@ export const index = <A>(i: number): Prism<A[], A> => ({
 });
 
 /** Strip index-signature keys, keeping only concretely declared literal keys. */
-type StripIndex<T> = {
+export type StripIndex<T> = {
 	[K in keyof T as string extends K ? never : number extends K ? never : K]: T[K];
 };
 
-/** Extract the literal tag values for key TK across all members of union S,
- *  filtering out wide `string` (e.g. from an UnknownEntity catch-all). */
-type TagValues<S, TK extends string> = S extends Record<TK, infer V>
+/** Extract the literal tag values for key TK across all members of union S. */
+export type TagValues<S, TK extends string> = S extends Record<TK, infer V>
 	? string extends V
 		? never
 		: V
 	: never;
 
-/** Prism for a specific variant of a discriminated union (identity form).
- *  The focus type `A` is the narrowed union member itself.
- *
- * ```ts
- * const _circle = match<Shape>()("kind", "circle");
- * // Prism<Shape, { kind: "circle"; radius: number }>
- * ```
- */
+/** Prism for a specific variant of a discriminated union (identity form). */
 export const match =
 	<S>() =>
 	<TK extends keyof StripIndex<S> & string, TV extends string>(
@@ -151,18 +139,7 @@ export const match =
 		review: (a) => a as unknown as S,
 	});
 
-/** Prism for a specific variant of a discriminated union (with transformation).
- *  Unlike `match`, allows custom `get`/`build` to transform the focus type.
- *
- * ```ts
- * const _circleRadius = matchWith<Shape>()(
- *   "kind", "circle",
- *   (s) => s.radius,
- *   (r) => ({ kind: "circle", radius: r }),
- * );
- * // Prism<Shape, number>
- * ```
- */
+/** Prism for a specific variant of a discriminated union (with transformation). */
 export const matchWith =
 	<S>() =>
 	<TK extends keyof StripIndex<S> & string, TV extends string, A>(
@@ -180,40 +157,23 @@ export const matchWith =
 	});
 
 // ---------------------------------------------------------------------------
-// Operations (prism flows through the pipe)
+// Operations — free functions, all logic lives here
 // ---------------------------------------------------------------------------
 
-/** Extract the focus from a value, returning Maybe<A>.
- *
- * ```ts
- * pipe(_just<number>(), preview(M.just(42))) // => Just(42)
- * ```
- */
+/** Extract the focus from a value, returning Maybe<A>. */
 export const preview =
 	<S>(s: S) =>
 	<A>(prism: Prism<S, A>): Maybe<A> =>
 		prism.preview(s);
 
-/** Construct the whole S from the focus A.
- *
- * ```ts
- * pipe(_just<number>(), review(42)) // => Just(42)
- * ```
- */
+/** Construct the whole S from the focus A. */
 export const review =
 	<A>(a: A) =>
 	<S>(prism: Prism<S, A>): S =>
 		prism.review(a);
 
-/** Modify the focus (if present) with a function, returning an updater `S => S`.
- * Uses the Prism's `modify` override when available (preserves context),
- * otherwise falls back to `preview → f → review`.
- *
- * ```ts
- * pipe(_just<number>(), over(n => n + 1))(M.just(10)) // => Just(11)
- * ```
- */
-export const over =
+/** Modify the focus (if present) with a function, returning an updater `S => S`. */
+export const modify =
 	<A>(f: (a: A) => A) =>
 	<S>(prism: Prism<S, A>) =>
 	(s: S): S => {
@@ -223,76 +183,9 @@ export const over =
 		return prism.review(f(ma.value));
 	};
 
-/** Replace the focus (if present), returning an updater `S => S`.
- *
- * ```ts
- * pipe(_just<number>(), set(99))(M.just(10)) // => Just(99)
- * ```
- */
+/** Replace the focus (if present), returning an updater `S => S`. */
 export const set =
 	<A>(a: A) =>
 	<S>(prism: Prism<S, A>) =>
 	(s: S): S =>
-		over<A>(() => a)(prism)(s);
-
-// ---------------------------------------------------------------------------
-// Composition
-// ---------------------------------------------------------------------------
-
-/** Helper: derive modify from a Prism (uses override when available). */
-export const prismModify = <S, A>(prism: Prism<S, A>) =>
-	prism.modify ??
-	((f: (a: A) => A) =>
-		(s: S): S => {
-			const ma = prism.preview(s);
-			if (M.isNothing(ma)) return s;
-			return prism.review(f(ma.value));
-		});
-
-/** Unified compose (pipe-friendly, discriminates on to.tag). */
-export function compose<A, B>(to: Prism<A, B>): <S>(from: Prism<S, A>) => Prism<S, B>;
-export function compose<A, B>(to: Lens<A, B>): <S>(from: Prism<S, A>) => Prism<S, B>;
-export function compose<A, B>(to: Traversal<A, B>): <S>(from: Prism<S, A>) => Traversal<S, B>;
-export function compose<A, B>(
-	to: Prism<A, B> | Lens<A, B> | Traversal<A, B>,
-): <S>(from: Prism<S, A>) => Prism<S, B> | Traversal<S, B> {
-	return <S>(from: Prism<S, A>) => {
-		if (to.tag === "Traversal") {
-			const traversal = to as Traversal<A, B>;
-			return {
-				tag: "Traversal" as const,
-				modify: (f: (b: B) => B) => prismModify(from)(traversal.modify(f)),
-				toArray: (s: S) => {
-					const ma = from.preview(s);
-					if (M.isNothing(ma)) return [];
-					return traversal.toArray(ma.value);
-				},
-			};
-		}
-		if (to.tag === "Lens") {
-			const lens = to as Lens<A, B>;
-			return {
-				tag: "Prism" as const,
-				preview: (s: S) => {
-					const ma = from.preview(s);
-					if (M.isNothing(ma)) return M.nothing();
-					return M.just(lens.get(ma.value));
-				},
-				review: (b: B) => from.review(lens.set(b)({} as A)),
-				modify: (f: (b: B) => B) => prismModify(from)((a: A) => lens.set(f(lens.get(a)))(a)),
-			};
-		}
-		// default: Prism + Prism
-		const inner = to as Prism<A, B>;
-		return {
-			tag: "Prism" as const,
-			preview: (s: S) => {
-				const ma = from.preview(s);
-				if (M.isNothing(ma)) return M.nothing();
-				return inner.preview(ma.value);
-			},
-			review: (b: B) => from.review(inner.review(b)),
-			modify: (f: (b: B) => B) => prismModify(from)(prismModify(inner)(f)),
-		};
-	};
-}
+		modify<A>(() => a)(prism)(s);
