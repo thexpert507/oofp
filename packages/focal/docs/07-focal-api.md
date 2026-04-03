@@ -800,6 +800,48 @@ El imperativo requiere 7 type guards manuales — uno por variante de la unión 
 
 Para el análisis completo con metodología y datos crudos, ver la [referencia de benchmarks](https://oofp.pages.dev/reference/benchmarks#oofpfocal--optics-vs-imperative) en la documentación del sitio.
 
+### Escalabilidad
+
+El overhead de la Focal API **no crece** con el tamaño de la colección — al contrario, se diluye. Al medir el ratio imperativo/Focal API con colecciones de 22, 220, 1,100 y 5,500 entidades, el resultado es que el gap se cierra a medida que n aumenta:
+
+| Escenario | ×1 (22 ent.) | ×10 (220) | ×50 (1,100) | ×250 (5,500) |
+|---|--:|--:|--:|--:|
+| `filterByType` | 7.6x | 6.1x | 5.8x | 2.6x |
+| `deepUpdate` | 8.5x | 6.8x | 6.2x | 3.9x |
+| `domainMapping` | 12.8x | 8.2x | 7.5x | 7.4x |
+
+La razón: la Focal API tiene un costo fijo por llamada (construir el pipe) más un costo O(n) de iteración, igual que el imperativo. A medida que n crece, el O(n) compartido domina y el costo fijo se vuelve una fracción cada vez menor del total. No hay penalización asintótica — la Focal API escala exactamente igual que el imperativo.
+
+### Rutas pre-construidas
+
+Si una ruta Focal aparece en un hot path medido con profiler, extraerla a una constante de módulo recupera una parte significativa del overhead:
+
+```ts
+// Patrón idiomático — el pipe se construye en cada llamada
+function readAccess(profile: ProfileEntity) {
+  return pipe(Focal.from<ProfileEntity>(), Focal.prop("firstName"), Focal.get(profile));
+}
+
+// Ruta pre-construida — la constante se define una vez, solo el terminador varía
+const firstNameFocal = pipe(Focal.from<ProfileEntity>(), Focal.prop("firstName"));
+
+function readAccess(profile: ProfileEntity) {
+  return pipe(firstNameFocal, Focal.get(profile));
+}
+```
+
+Mejora observada frente al patrón idiomático:
+
+| Escenario | Focal pre-built | Optics pre-built |
+|---|--:|--:|
+| Lectura simple (`get`) | **2.7x más rápido** | 3.8x más rápido |
+| Collect (`filterByType`) | **1.3x más rápido** | 1.4x más rápido |
+| Modify + run (`deepUpdate`) | **1.5x más rápido** | 1.6x más rápido |
+
+El Focal pre-built prácticamente iguala a las optics puras pre-built en todos los escenarios de traversal — la diferencia residual es solo el wrapper del Focal sobre el optic subyacente. La mejora es mayor en reads simples (donde la construcción domina el costo) y menor en traversals grandes (donde la iteración domina).
+
+**Guía práctica:** en código de aplicación normal, el patrón idiomático es suficiente. Si un profiler muestra una ruta Focal como cuello de botella, extraerla a una constante de módulo es la optimización correcta — sin cambiar la API ni el estilo declarativo del código.
+
 ---
 
 **Anterior:** [Composición](./06-composicion.md) — Combinar diferentes tipos de optics directamente
