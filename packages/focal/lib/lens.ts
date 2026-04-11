@@ -7,6 +7,8 @@
  *   PutPut:  set(b)(set(a)(s))     ≡ set(b)(s)   — setting twice is the same as setting once
  */
 
+import type { PathValue, SafePaths } from "./path-types";
+
 // ---------------------------------------------------------------------------
 // URI — self-registration in the HKT registry
 // ---------------------------------------------------------------------------
@@ -65,24 +67,35 @@ export const identity = <A>(): Lens<A, A> => ({
 // Combinators
 // ---------------------------------------------------------------------------
 
-/** Focus on a property of the current focus. All types are inferred.
+/** Focus on a property (or a dot-notation path) of the current focus.
+ * All levels must be non-nullable. For nullable levels use `Prism.optional`.
  *
  * ```ts
  * const streetLens = pipe(
  *   identity<Company>(),
- *   prop('ceo'),
- *   prop('address'),
- *   prop('street'),
+ *   prop('ceo.address.street'),
  * );
  * ```
  */
-export const prop =
-	<A, K extends keyof A>(key: K) =>
-	<S>(lens: Lens<S, A>): Lens<S, A[K]> => ({
-		tag: "Lens",
-		get: (s) => lens.get(s)[key],
-		set: (v) => (s) => lens.set({ ...lens.get(s), [key]: v })(s),
-	});
+export function prop<A, const Key extends SafePaths<A>>(
+	key: Key,
+): <S>(lens: Lens<S, A>) => Lens<S, PathValue<A, Key>>;
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export function prop(key: string): (lens: Lens<any, any>) => Lens<any, any> {
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	return (lens: Lens<any, any>) => {
+		const keys = key.split(".");
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		return keys.reduce<Lens<any, any>>((acc, k) => {
+			return make(
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				(s: any) => acc.get(s)[k],
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				(v: any) => (s: any) => acc.set({ ...acc.get(s), [k]: v })(s),
+			);
+		}, lens);
+	};
+}
 
 // ---------------------------------------------------------------------------
 // Operations — free functions, all logic lives here

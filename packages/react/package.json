@@ -23,7 +23,9 @@
 	"main": "./dist/es/index.js",
 	"module": "./dist/es/index.js",
 	"types": "./dist/index.d.ts",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"publishConfig": {
 		"access": "public"
 	},
@@ -32,6 +34,11 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/es/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./state": {
+			"types": "./dist/state/index.d.ts",
+			"import": "./dist/es/state/index.js",
+			"require": "./dist/cjs/state/index.cjs"
 		}
 	},
 	"scripts": {
@@ -50,9 +57,10 @@
 	},
 	"devDependencies": {
 		"@oofp/core": "workspace:*",
-		"@types/react": "^19.0.2",
-		"@types/react-dom": "^19.0.2",
-		"react": "^19.0.0",
-		"react-dom": "^19.0.0"
+		"@oofp/focal": "workspace:*",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
+		"react": "^19.2.4",
+		"react-dom": "^19.2.4"
 	}
 }

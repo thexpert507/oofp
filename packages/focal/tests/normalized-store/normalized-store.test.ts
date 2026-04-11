@@ -132,13 +132,14 @@ describe("Focal.prop — deep immutable access", () => {
 	});
 
 	it("reads nested profilePicture artifact width via Focal.index", () => {
-		const picture = pipe(
+		const pictureMaybe = pipe(
 			Focal.from<typeof profile>(),
-			Focal.prop("profilePicture"),
-			Focal.get(profile),
+			Focal.optional("profilePicture"),
+			Focal.preview(profile),
 		);
 
-		if (picture === null) throw new Error("Expected profilePicture to be non-null");
+		if (M.isNothing(pictureMaybe)) throw new Error("Expected profilePicture to be non-null");
+		const picture = pictureMaybe.value;
 
 		const artifacts = picture.displayImageReference.vectorImage.artifacts;
 		const firstArtifact = pipe(
@@ -204,7 +205,7 @@ describe("fromEach + match + prop — collect across all entities of a type", ()
 		const companies = pipe(
 			Focal.fromEach<IncludedEntity>(),
 			Focal.compose(positionGroupFocal),
-			Focal.prop("companyName"),
+			Focal.optional("companyName"),
 			Focal.collect(included),
 		);
 		expect(companies).toContain("Alfa AI & Blockchain");

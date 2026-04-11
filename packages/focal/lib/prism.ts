@@ -11,6 +11,7 @@ import type { Either } from "@oofp/core/either";
 import * as E from "@oofp/core/either";
 import * as M from "@oofp/core/maybe";
 import type { Maybe } from "@oofp/core/maybe";
+import type { NullablePaths, PathValue } from "./path-types";
 
 // ---------------------------------------------------------------------------
 // URI — self-registration in the HKT registry
@@ -112,6 +113,32 @@ export const index = <A>(i: number): Prism<A[], A> => ({
 	},
 });
 
+/** Prism focusing on the first element of an array that satisfies a predicate.
+ * Nothing if no element matches.
+ *
+ * Note: `review` wraps the value in a single-element array; use `modify` for in-place updates.
+ *
+ * ```ts
+ * const firstAdult = Prism.first<Person>(p => p.age >= 18);
+ * pipe(firstAdult, Prism.preview([{ age: 10 }, { age: 20 }])) // => Just({ age: 20 })
+ * ```
+ */
+export const first = <A>(pred: (a: A) => boolean): Prism<A[], A> => ({
+	tag: "Prism",
+	preview: (arr) => {
+		const found = arr.find(pred);
+		return found !== undefined ? M.just(found) : M.nothing();
+	},
+	review: (a) => [a],
+	modify: (f) => (arr) => {
+		const i = arr.findIndex(pred);
+		if (i === -1) return arr;
+		const next = [...arr];
+		next[i] = f(arr[i]);
+		return next;
+	},
+});
+
 /** Prism focusing on the value at key `k` of a `Record<string, V>`. Nothing if the key is absent.
  *
  * Note: `review` reconstructs a single-key record; use `modify` for in-place updates.
@@ -169,6 +196,86 @@ export const matchWith =
 				: M.nothing(),
 		review: build,
 	});
+
+// ---------------------------------------------------------------------------
+// Combinators
+// ---------------------------------------------------------------------------
+
+/** Create a Prism for a nullable/optional property (or dot-path through nullable levels).
+ *
+ * - Single key:  `optional("manager")` — the key must be nullable/optional.
+ * - Dot-path:    `optional("manager.name")` — at least one level must be nullable.
+ *
+ * Each segment is traversed via a nullable prism: if the value at that key is
+ * `null` or `undefined`, the prism yields `Nothing`.
+ *
+ * ```ts
+ * const managerName = Prism.optional<Company, "manager.name">("manager.name");
+ * pipe(managerName, Prism.preview(acme)) // => Nothing | Just("Bob")
+ * ```
+ */
+export function optional<A, const Key extends NullablePaths<A>>(
+	key: Key,
+): Prism<A, NonNullable<PathValue<A, Key>>>;
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export function optional(key: string): Prism<any, any> {
+	const keys = key.split(".");
+	// Build a single composed prism for the full path.
+	// Start with a "identity-like" seed and compose each step.
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	return keys.reduce<Prism<any, any>>(
+		(acc, k) => {
+			// Step prism: nullable access for key k
+			return make(
+				// preview: compose acc.preview then step
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				(s: any) => {
+					const ma = acc.preview(s);
+					if (M.isNothing(ma)) return M.nothing();
+					return M.fromNullable(ma.value[k]);
+				},
+				// review: not meaningful for optional paths, provide a stub
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				(_v: any) => ({}) as any,
+				// modify: the real workhorse — safe in-place update
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				(f: (a: any) => any) =>
+					// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+					(s: any) => {
+						// Use acc.modify to reach the parent, then update key k
+						const parentModify = acc.modify
+							? acc.modify
+							: // fallback if no modify override
+								// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+								(g: (a: any) => any) =>
+									// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+									(s2: any) => {
+										const ma = acc.preview(s2);
+										if (M.isNothing(ma)) return s2;
+										return acc.review(g(ma.value));
+									};
+						return parentModify(
+							// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+							(parent: any) => {
+								const v = parent[k];
+								if (v === null || v === undefined) return parent;
+								return { ...parent, [k]: f(v) };
+							},
+						)(s);
+					},
+			);
+		},
+		// Seed: identity prism (always succeeds)
+		make(
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			(s: any) => M.just(s),
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			(a: any) => a,
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			(f: (a: any) => any) => (s: any) => f(s),
+		),
+	);
+}
 
 // ---------------------------------------------------------------------------
 // Operations — free functions, all logic lives here

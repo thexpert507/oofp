@@ -1,4 +1,5 @@
 import { pipe } from "@oofp/core/pipe";
+import * as M from "@oofp/core/maybe";
 import * as Focal from "../../lib/focal/index.ts";
 
 import type {
@@ -104,23 +105,32 @@ export function toCandidateProfile(response: NormalizedStoreResponse): Candidate
 		: "";
 
 	// summary — en_US locale
-	const summary = mainProfile
-		? (pipe(
+	const summaryMaybe = mainProfile
+		? pipe(
 				Focal.from<ProfileEntity>(),
-				Focal.prop("multiLocaleSummary"),
-				Focal.get(mainProfile),
-			)?.["en_US"] ?? null)
-		: null;
+				Focal.optional("multiLocaleSummary"),
+				Focal.preview(mainProfile),
+			)
+		: M.nothing<Record<string, string>>();
+	const summary = pipe(
+		summaryMaybe,
+		M.map((rec: Record<string, string>) => rec["en_US"] ?? null),
+		M.getOrElse(null as string | null),
+	);
 
 	// currentEmployer — companyName of the first PositionGroup
-	const currentEmployer =
+	const currentEmployerMaybe =
 		positionGroups.length > 0
-			? (pipe(
+			? pipe(
 					Focal.from<PositionGroupEntity>(),
-					Focal.prop("companyName"),
-					Focal.get(positionGroups[0]),
-				) ?? null)
-			: null;
+					Focal.optional("companyName"),
+					Focal.preview(positionGroups[0]),
+				)
+			: M.nothing<string>();
+	const currentEmployer = pipe(
+		currentEmployerMaybe,
+		M.getOrElse(null as string | null),
+	);
 
 	// jobTitles — title from every Position entity
 	const jobTitles = pipe(
@@ -132,9 +142,9 @@ export function toCandidateProfile(response: NormalizedStoreResponse): Candidate
 	// employers — companyName from every PositionGroup entity
 	const employers = pipe(
 		Focal.fromEach<PositionGroupEntity>(),
-		Focal.prop("companyName"),
+		Focal.optional("companyName"),
 		Focal.collect(positionGroups),
-	).filter((n): n is string => n !== undefined);
+	);
 
 	// skills — name from every Skill entity
 	const skills = pipe(Focal.fromEach<SkillEntity>(), Focal.prop("name"), Focal.collect(rawSkills));
@@ -154,7 +164,10 @@ export function toCandidateProfile(response: NormalizedStoreResponse): Candidate
 	// education
 	const educationMapped = educations.map((ed) => ({
 		school: pipe(Focal.from<EducationEntity>(), Focal.prop("schoolName"), Focal.get(ed)),
-		field: pipe(Focal.from<EducationEntity>(), Focal.prop("fieldOfStudy"), Focal.get(ed)),
+		field: pipe(
+			pipe(Focal.from<EducationEntity>(), Focal.optional("fieldOfStudy"), Focal.preview(ed)),
+			M.getOrElse(null as string | null),
+		),
 	}));
 
 	return {

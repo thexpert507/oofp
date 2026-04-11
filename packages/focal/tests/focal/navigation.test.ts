@@ -1,5 +1,5 @@
 /**
- * Tests for Focal navigation methods: prop, each, eachRecord, index, match, fromEach, compose, optional, filter.
+ * Tests for Focal navigation methods: prop, each, eachRecord, index, match, fromEach, compose, optional, filter, first.
  */
 
 import * as M from "@oofp/core/maybe";
@@ -124,6 +124,56 @@ describe("Focal.prop", () => {
 		);
 		expect(updated.ceo.name).toBe("Alice");
 		expect(updated.ceo.age).toBe(45); // sibling untouched
+	});
+
+	describe("dot-notation path", () => {
+		it("gets a two-level path via prop('ceo.name')", () => {
+			const name = pipe(Focal.from<Company>(), Focal.prop("ceo.name"), Focal.get(acme));
+			expect(name).toBe("Bob");
+		});
+
+		it("gets a three-level path via prop('departments.0.name') — single-key per call is equivalent", () => {
+			// Use a flat Company with a nested structure to test 3-level path
+			type Config = { server: { db: { host: string } } };
+			const cfg: Config = { server: { db: { host: "localhost" } } };
+			const host = pipe(Focal.from<Config>(), Focal.prop("server.db.host"), Focal.get(cfg));
+			expect(host).toBe("localhost");
+		});
+
+		it("sets a two-level path via prop('ceo.age')", () => {
+			const updated = pipe(
+				Focal.from<Company>(),
+				Focal.prop("ceo.age"),
+				Focal.set(50),
+				Focal.run(acme),
+			);
+			expect(updated.ceo.age).toBe(50);
+			expect(updated.ceo.name).toBe("Bob"); // sibling untouched
+			expect(updated.name).toBe("Acme"); // parent untouched
+		});
+
+		it("modifies a two-level path via prop('ceo.age')", () => {
+			const updated = pipe(
+				Focal.from<Company>(),
+				Focal.prop("ceo.age"),
+				Focal.modify((n) => n + 1),
+				Focal.run(acme),
+			);
+			expect(updated.ceo.age).toBe(46);
+		});
+
+		it("sets a three-level path immutably", () => {
+			type Config = { server: { db: { host: string } } };
+			const cfg: Config = { server: { db: { host: "localhost" } } };
+			const updated = pipe(
+				Focal.from<Config>(),
+				Focal.prop("server.db.host"),
+				Focal.set("prod.example.com"),
+				Focal.run(cfg),
+			);
+			expect(updated.server.db.host).toBe("prod.example.com");
+			expect(cfg.server.db.host).toBe("localhost"); // original unchanged
+		});
 	});
 });
 
@@ -451,6 +501,98 @@ describe("Focal.optional", () => {
 			Focal.collect(team),
 		);
 		expect(cities).toEqual(["NYC", "NYC"]); // Bob (null address) omitido
+	});
+
+	describe("dot-notation path", () => {
+		type Profile = {
+			user: {
+				contact: { email: string } | null;
+				nickname: string | undefined;
+			} | null;
+		};
+
+		const withContact: Profile = {
+			user: { contact: { email: "alice@example.com" }, nickname: "ali" },
+		};
+		const withoutContact: Profile = {
+			user: { contact: null, nickname: undefined },
+		};
+		const nullUser: Profile = { user: null };
+
+		it("previews a two-level nullable path when present", () => {
+			const result = pipe(
+				Focal.from<Profile>(),
+				Focal.optional("user.contact"),
+				Focal.preview(withContact),
+			);
+			expect(result).toEqual(M.just({ email: "alice@example.com" }));
+		});
+
+		it("previews a two-level nullable path returns Nothing when null", () => {
+			const result = pipe(
+				Focal.from<Profile>(),
+				Focal.optional("user.contact"),
+				Focal.preview(withoutContact),
+			);
+			expect(result).toEqual(M.nothing());
+		});
+
+		it("previews Nothing when the first level is null", () => {
+			const result = pipe(
+				Focal.from<Profile>(),
+				Focal.optional("user.contact"),
+				Focal.preview(nullUser),
+			);
+			expect(result).toEqual(M.nothing());
+		});
+
+		it("updates through a two-level nullable path when present", () => {
+			const updated = pipe(
+				Focal.from<Profile>(),
+				Focal.optional("user.contact"),
+				Focal.set({ email: "bob@example.com" }),
+				Focal.run(withContact),
+			);
+			expect(updated.user?.contact?.email).toBe("bob@example.com");
+		});
+
+		it("set is a no-op when intermediate level is null", () => {
+			const updated = pipe(
+				Focal.from<Profile>(),
+				Focal.optional("user.contact"),
+				Focal.set({ email: "bob@example.com" }),
+				Focal.run(withoutContact),
+			);
+			expect(updated).toEqual(withoutContact); // unchanged
+		});
+
+		it("chains optional('user.contact') → prop('email') → preview", () => {
+			const result = pipe(
+				Focal.from<Profile>(),
+				Focal.optional("user.contact"),
+				Focal.prop("email"),
+				Focal.preview(withContact),
+			);
+			expect(result).toEqual(M.just("alice@example.com"));
+		});
+
+		it("previews an undefined field path via optional", () => {
+			const result = pipe(
+				Focal.from<Profile>(),
+				Focal.optional("user.nickname"),
+				Focal.preview(withContact),
+			);
+			expect(result).toEqual(M.just("ali"));
+		});
+
+		it("previews Nothing for undefined field", () => {
+			const result = pipe(
+				Focal.from<Profile>(),
+				Focal.optional("user.nickname"),
+				Focal.preview(withoutContact),
+			);
+			expect(result).toEqual(M.nothing());
+		});
 	});
 });
 
@@ -1130,5 +1272,172 @@ describe("Focal.match", () => {
 			{ kind: "rect", w: 3, h: 4 },
 			{ kind: "circle", r: 20 },
 		]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Focal.first — structural navigation to the first matching element
+// ---------------------------------------------------------------------------
+
+describe("Focal.first", () => {
+	it("produces a Prism focal from a Lens focal", () => {
+		const f = pipe(
+			Focal.from<Department[]>(),
+			Focal.first((_d: Department) => true),
+		);
+		expect(f.optic.tag).toBe("Prism");
+	});
+
+	it("produces a Traversal focal from a Traversal focal", () => {
+		const f = pipe(
+			Focal.from<Company>(),
+			Focal.each("departments"),
+			Focal.prop("employees"),
+			Focal.first((_e: Employee) => true),
+		);
+		expect(f.optic.tag).toBe("Traversal");
+	});
+
+	it("preview returns Just the first matching element", () => {
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.prop("departments"),
+			Focal.first((d: Department) => d.budget > 300_000),
+			Focal.preview(acme),
+		);
+		expect(result).toEqual(M.just(acme.departments[0]));
+	});
+
+	it("preview returns Nothing when no element matches", () => {
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.prop("departments"),
+			Focal.first((d: Department) => d.budget > 1_000_000),
+			Focal.preview(acme),
+		);
+		expect(result).toEqual(M.nothing());
+	});
+
+	it("preview returns Nothing on empty array", () => {
+		const empty: Company = { ...acme, departments: [] };
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.prop("departments"),
+			Focal.first((_d: Department) => true),
+			Focal.preview(empty),
+		);
+		expect(result).toEqual(M.nothing());
+	});
+
+	it("preview returns Just the first match, not all matches", () => {
+		// Both departments match budget > 0, but only the first is returned
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.prop("departments"),
+			Focal.first((d: Department) => d.budget > 0),
+			Focal.preview(acme),
+		);
+		expect(result).toEqual(M.just(acme.departments[0]));
+	});
+
+	it("chains: first → prop → preview", () => {
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.prop("departments"),
+			Focal.first((d: Department) => d.name === "Sales"),
+			Focal.prop("budget"),
+			Focal.preview(acme),
+		);
+		expect(result).toEqual(M.just(200_000));
+	});
+
+	it("modify updates only the first matching element, leaving others untouched", () => {
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.prop("departments"),
+			Focal.first((d: Department) => d.budget > 0),
+			Focal.prop("budget"),
+			Focal.modify((n) => n * 2),
+			Focal.run(acme),
+		);
+		// Only Engineering (first match) is doubled
+		expect(result.departments[0].budget).toBe(1_000_000);
+		expect(result.departments[1].budget).toBe(200_000); // Sales untouched
+	});
+
+	it("modify is a no-op when no element matches", () => {
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.prop("departments"),
+			Focal.first((d: Department) => d.budget > 1_000_000),
+			Focal.prop("budget"),
+			Focal.modify((n) => n * 2),
+			Focal.run(acme),
+		);
+		expect(result).toEqual(acme);
+	});
+
+	it("set updates only the first matching element", () => {
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.prop("departments"),
+			Focal.first((d: Department) => d.name === "Engineering"),
+			Focal.prop("name"),
+			Focal.set("R&D"),
+			Focal.run(acme),
+		);
+		expect(result.departments[0].name).toBe("R&D");
+		expect(result.departments[1].name).toBe("Sales"); // untouched
+	});
+
+	it("has returns true when at least one element matches", () => {
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.prop("departments"),
+			Focal.first((d: Department) => d.budget > 300_000),
+			Focal.has(acme),
+		);
+		expect(result).toBe(true);
+	});
+
+	it("has returns false when no element matches", () => {
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.prop("departments"),
+			Focal.first((d: Department) => d.budget > 1_000_000),
+			Focal.has(acme),
+		);
+		expect(result).toBe(false);
+	});
+
+	it("chains: each → prop → first — finds first employee with salary >= 90k in each dept", () => {
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.each("departments"),
+			Focal.prop("employees"),
+			Focal.first((e: Employee) => e.salary >= 90_000),
+			Focal.prop("person"),
+			Focal.prop("name"),
+			Focal.collect(acme),
+		);
+		// Engineering: Alice (100k) is first match; Sales: Diana (90k) is first match
+		expect(result).toEqual(["Alice", "Diana"]);
+	});
+
+	it("chains: each → prop → first → modify — updates first match in each dept independently", () => {
+		const result = pipe(
+			Focal.from<Company>(),
+			Focal.each("departments"),
+			Focal.prop("employees"),
+			Focal.first((e: Employee) => e.salary >= 90_000),
+			Focal.prop("salary"),
+			Focal.modify((n) => n + 10_000),
+			Focal.run(acme),
+		);
+		// Engineering: Alice 100k → 110k (first match), Charlie 80k unchanged
+		expect(result.departments[0].employees[0].salary).toBe(110_000);
+		expect(result.departments[0].employees[1].salary).toBe(80_000);
+		// Sales: Diana 90k → 100k (first match)
+		expect(result.departments[1].employees[0].salary).toBe(100_000);
 	});
 });

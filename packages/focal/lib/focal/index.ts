@@ -1,26 +1,24 @@
 export type { Focal } from "./types";
 export { compose } from "./compose";
-export {
-	from,
-	fromEach,
-	fromOptic,
-	toOptic,
-	prop,
-	optional,
-	each,
-	eachRecord,
-	index,
-	indexRecord,
-	elements,
-	match,
-	filter,
-	modify,
-	set,
-	fold,
-	get,
-	preview,
-	collect,
-	has,
-	count,
-	run,
-} from "./methods";
+export { from, fromEach, fromOptic, toOptic } from "./entry-points";
+export { prop } from "./prop";
+export { optional } from "./optional";
+export { filter } from "./filter";
+export { each } from "./each";
+export { eachRecord } from "./eachRecord";
+export { elements } from "./elements";
+export { index } from "./index-nav";
+export { indexRecord } from "./index-record-nav";
+export { first } from "./first";
+export { match } from "./match";
+export { modify } from "./modify";
+export { set } from "./set";
+export { fold } from "./fold";
+export { get } from "./get";
+export { preview } from "./preview";
+export { collect } from "./collect";
+export { has } from "./has";
+export { count } from "./count";
+export { find } from "./find";
+export { modifyWith } from "./modify-with";
+export { run } from "./run";
