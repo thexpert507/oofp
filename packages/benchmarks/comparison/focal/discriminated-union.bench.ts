@@ -36,6 +36,7 @@
 
 import { bench, describe } from "vitest";
 import * as focalApi from "./_helpers/focal-api-impl.ts";
+import * as focalBuilder from "./_helpers/focal-builder-impl.ts";
 import * as focal from "./_helpers/focal-impl.ts";
 import * as imperative from "./_helpers/imperative.ts";
 import { candidateProfileResponse } from "./_helpers/fixtures.ts";
@@ -45,6 +46,10 @@ const { included } = candidateProfileResponse;
 describe("Discriminated union filter — collect all SkillEntity from mixed array", () => {
 	bench("@oofp/focal  Focal API  from().elements().match().collect()", () => {
 		focalApi.filterByType(included);
+	});
+
+	bench("@oofp/focal  Builder   fromEach().match().collect()", () => {
+		focalBuilder.filterByType(included);
 	});
 
 	bench("@oofp/focal  Traversal.each + Prism.match + Traversal.collect", () => {

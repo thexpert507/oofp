@@ -28,6 +28,7 @@
 
 import { bench, describe } from "vitest";
 import * as focalApi from "./_helpers/focal-api-impl.ts";
+import * as focalBuilder from "./_helpers/focal-builder-impl.ts";
 import * as focal from "./_helpers/focal-impl.ts";
 import * as imperative from "./_helpers/imperative.ts";
 import { candidateProfileResponse } from "./_helpers/fixtures.ts";
@@ -35,6 +36,10 @@ import { candidateProfileResponse } from "./_helpers/fixtures.ts";
 describe("Deep immutable update — set firstName across all ProfileEntities", () => {
 	bench("@oofp/focal  Focal API  from().elements().match().prop().modify()", () => {
 		focalApi.deepUpdate(candidateProfileResponse);
+	});
+
+	bench("@oofp/focal  Builder   from().elements().match().prop().modify().run()", () => {
+		focalBuilder.deepUpdate(candidateProfileResponse);
 	});
 
 	bench("@oofp/focal  Traversal.compose + Traversal.modify", () => {

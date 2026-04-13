@@ -5,7 +5,7 @@ import { compose } from "./compose";
 import { make } from "./internal";
 import { Focal } from "./types";
 
-type RecordKeys<A> = {
+export type RecordKeys<A> = {
 	[K in keyof A]: A[K] extends Record<string, unknown> ? K : never;
 }[keyof A];
 

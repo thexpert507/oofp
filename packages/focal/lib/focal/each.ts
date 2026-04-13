@@ -5,11 +5,11 @@ import { compose } from "./compose";
 import { make } from "./internal";
 import { Focal } from "./types";
 
-type ArrayKeys<A> = {
+export type ArrayKeys<A> = {
 	[K in keyof A]: A[K] extends unknown[] ? K : never;
 }[keyof A];
 
-type ElementOf<A, K extends keyof A> = A[K] extends (infer E)[] ? E : never;
+export type ElementOf<A, K extends keyof A> = A[K] extends (infer E)[] ? E : never;
 
 export const each =
 	<A, K extends ArrayKeys<A>>(key: K) =>

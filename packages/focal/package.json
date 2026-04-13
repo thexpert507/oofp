@@ -56,6 +56,11 @@
 			"types": "./dist/compose.d.ts",
 			"import": "./dist/es/compose.js",
 			"require": "./dist/cjs/compose.cjs"
+		},
+		"./builder": {
+			"types": "./dist/builder.d.ts",
+			"import": "./dist/es/builder.js",
+			"require": "./dist/cjs/builder.cjs"
 		}
 	},
 	"scripts": {

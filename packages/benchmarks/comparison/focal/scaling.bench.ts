@@ -41,6 +41,7 @@
 import { bench, describe } from "vitest";
 import { pipe } from "@oofp/core/pipe";
 import { Focal } from "@oofp/focal";
+import { FocalBuilder } from "@oofp/focal/builder";
 
 import * as imperative from "./_helpers/imperative.ts";
 import { candidateProfileResponse } from "./_helpers/fixtures.ts";
@@ -193,11 +194,101 @@ function focalDomainMapping(response: NormalizedStoreResponse): CandidateProfile
 	};
 }
 
+// ── Builder implementations (idiomatic — full chain per call) ─────────────────
+
+function builderFilterByType(entities: IncludedEntity[]): SkillEntity[] {
+	return FocalBuilder.fromEach<IncludedEntity>()
+		.match("$type", T_SKILL)
+		.collect(entities) as SkillEntity[];
+}
+
+function builderDeepUpdate(response: NormalizedStoreResponse): NormalizedStoreResponse {
+	return FocalBuilder.from<NormalizedStoreResponse>()
+		.prop("included")
+		.elements()
+		.match("$type", T_PROFILE)
+		.prop("firstName")
+		.modify(() => "Updated")
+		.run(response);
+}
+
+function builderDomainMapping(response: NormalizedStoreResponse): CandidateProfile {
+	function collectVariant<T>(variant: KnownEntityType): T[] {
+		return FocalBuilder.from<NormalizedStoreResponse>()
+			.prop("included")
+			.elements()
+			.match("$type", variant)
+			.collect(response) as T[];
+	}
+
+	const profiles = collectVariant<ProfileEntity>(T_PROFILE);
+	const positionGroups = collectVariant<{ companyName?: string }>(T_POSITION_GROUP);
+	const certifications = collectVariant<{ name: string; authority: string }>(T_CERTIFICATION);
+	const languages = collectVariant<{ name: string; proficiency: string }>(T_LANGUAGE);
+	const educations = collectVariant<{ schoolName: string; fieldOfStudy: string | null }>(T_EDUCATION);
+
+	const mainProfile = profiles[0] as ProfileEntity | undefined;
+
+	const name = mainProfile
+		? FocalBuilder.from<ProfileEntity>().prop("firstName").get(mainProfile) +
+			" " +
+			FocalBuilder.from<ProfileEntity>().prop("lastName").get(mainProfile)
+		: "";
+
+	const summary =
+		(FocalBuilder.from<NormalizedStoreResponse>()
+			.prop("included")
+			.elements()
+			.match("$type", T_PROFILE)
+			.prop("multiLocaleSummary")
+			.collect(response)[0] as Record<string, string> | null | undefined)?.["en_US"] ?? null;
+
+	const currentEmployer = positionGroups[0]?.companyName ?? null;
+
+	const jobTitles = FocalBuilder.from<NormalizedStoreResponse>()
+		.prop("included")
+		.elements()
+		.match("$type", T_POSITION)
+		.prop("title")
+		.collect(response) as string[];
+
+	const employers = (
+		FocalBuilder.from<NormalizedStoreResponse>()
+			.prop("included")
+			.elements()
+			.match("$type", T_POSITION_GROUP)
+			.prop("companyName")
+			.collect(response) as Array<string | undefined>
+	).filter((n): n is string => n !== undefined);
+
+	const skills = FocalBuilder.from<NormalizedStoreResponse>()
+		.prop("included")
+		.elements()
+		.match("$type", T_SKILL)
+		.prop("name")
+		.collect(response) as string[];
+
+	return {
+		name,
+		summary,
+		currentEmployer: currentEmployer ?? null,
+		jobTitles,
+		employers,
+		skills,
+		certifications: certifications.map((c) => ({ name: c.name, issuer: c.authority })),
+		languages: languages.map((l) => ({ name: l.name, proficiency: l.proficiency })),
+		education: educations.map((ed) => ({ school: ed.schoolName, field: ed.fieldOfStudy })),
+	};
+}
+
 // ── Benches: filterByType ─────────────────────────────────────────────────────
 
 describe("Scaling — filterByType @ ×1 (22 entities)", () => {
 	bench("Focal API  from().elements().match().collect()", () => {
 		focalFilterByType(fixtures.x1.included);
+	});
+	bench("Builder    fromEach().match().collect()", () => {
+		builderFilterByType(fixtures.x1.included);
 	});
 	bench("imperative  array.filter(isSkill)", () => {
 		imperative.filterByType(fixtures.x1.included);
@@ -208,6 +299,9 @@ describe("Scaling — filterByType @ ×10 (220 entities)", () => {
 	bench("Focal API  from().elements().match().collect()", () => {
 		focalFilterByType(fixtures.x10.included);
 	});
+	bench("Builder    fromEach().match().collect()", () => {
+		builderFilterByType(fixtures.x10.included);
+	});
 	bench("imperative  array.filter(isSkill)", () => {
 		imperative.filterByType(fixtures.x10.included);
 	});
@@ -217,6 +311,9 @@ describe("Scaling — filterByType @ ×50 (1,100 entities)", () => {
 	bench("Focal API  from().elements().match().collect()", () => {
 		focalFilterByType(fixtures.x50.included);
 	});
+	bench("Builder    fromEach().match().collect()", () => {
+		builderFilterByType(fixtures.x50.included);
+	});
 	bench("imperative  array.filter(isSkill)", () => {
 		imperative.filterByType(fixtures.x50.included);
 	});
@@ -225,6 +322,9 @@ describe("Scaling — filterByType @ ×50 (1,100 entities)", () => {
 describe("Scaling — filterByType @ ×250 (5,500 entities)", () => {
 	bench("Focal API  from().elements().match().collect()", () => {
 		focalFilterByType(fixtures.x250.included);
+	});
+	bench("Builder    fromEach().match().collect()", () => {
+		builderFilterByType(fixtures.x250.included);
 	});
 	bench("imperative  array.filter(isSkill)", () => {
 		imperative.filterByType(fixtures.x250.included);
@@ -237,6 +337,9 @@ describe("Scaling — deepUpdate @ ×1 (22 entities)", () => {
 	bench("Focal API  from().elements().match().prop().modify()", () => {
 		focalDeepUpdate(fixtures.x1);
 	});
+	bench("Builder    from().elements().match().prop().modify().run()", () => {
+		builderDeepUpdate(fixtures.x1);
+	});
 	bench("imperative  map + spread", () => {
 		imperative.deepUpdate(fixtures.x1);
 	});
@@ -245,6 +348,9 @@ describe("Scaling — deepUpdate @ ×1 (22 entities)", () => {
 describe("Scaling — deepUpdate @ ×10 (220 entities)", () => {
 	bench("Focal API  from().elements().match().prop().modify()", () => {
 		focalDeepUpdate(fixtures.x10);
+	});
+	bench("Builder    from().elements().match().prop().modify().run()", () => {
+		builderDeepUpdate(fixtures.x10);
 	});
 	bench("imperative  map + spread", () => {
 		imperative.deepUpdate(fixtures.x10);
@@ -255,6 +361,9 @@ describe("Scaling — deepUpdate @ ×50 (1,100 entities)", () => {
 	bench("Focal API  from().elements().match().prop().modify()", () => {
 		focalDeepUpdate(fixtures.x50);
 	});
+	bench("Builder    from().elements().match().prop().modify().run()", () => {
+		builderDeepUpdate(fixtures.x50);
+	});
 	bench("imperative  map + spread", () => {
 		imperative.deepUpdate(fixtures.x50);
 	});
@@ -263,6 +372,9 @@ describe("Scaling — deepUpdate @ ×50 (1,100 entities)", () => {
 describe("Scaling — deepUpdate @ ×250 (5,500 entities)", () => {
 	bench("Focal API  from().elements().match().prop().modify()", () => {
 		focalDeepUpdate(fixtures.x250);
+	});
+	bench("Builder    from().elements().match().prop().modify().run()", () => {
+		builderDeepUpdate(fixtures.x250);
 	});
 	bench("imperative  map + spread", () => {
 		imperative.deepUpdate(fixtures.x250);
@@ -275,6 +387,9 @@ describe("Scaling — domainMapping @ ×1 (22 entities)", () => {
 	bench("Focal API  pipe chains (from/elements/match/prop/collect)", () => {
 		focalDomainMapping(fixtures.x1);
 	});
+	bench("Builder    fluent chains (from/elements/match/prop/collect)", () => {
+		builderDomainMapping(fixtures.x1);
+	});
 	bench("imperative  filter/map/find + optional chaining", () => {
 		imperative.domainMapping(fixtures.x1);
 	});
@@ -283,6 +398,9 @@ describe("Scaling — domainMapping @ ×1 (22 entities)", () => {
 describe("Scaling — domainMapping @ ×10 (220 entities)", () => {
 	bench("Focal API  pipe chains (from/elements/match/prop/collect)", () => {
 		focalDomainMapping(fixtures.x10);
+	});
+	bench("Builder    fluent chains (from/elements/match/prop/collect)", () => {
+		builderDomainMapping(fixtures.x10);
 	});
 	bench("imperative  filter/map/find + optional chaining", () => {
 		imperative.domainMapping(fixtures.x10);
@@ -293,6 +411,9 @@ describe("Scaling — domainMapping @ ×50 (1,100 entities)", () => {
 	bench("Focal API  pipe chains (from/elements/match/prop/collect)", () => {
 		focalDomainMapping(fixtures.x50);
 	});
+	bench("Builder    fluent chains (from/elements/match/prop/collect)", () => {
+		builderDomainMapping(fixtures.x50);
+	});
 	bench("imperative  filter/map/find + optional chaining", () => {
 		imperative.domainMapping(fixtures.x50);
 	});
@@ -301,6 +422,9 @@ describe("Scaling — domainMapping @ ×50 (1,100 entities)", () => {
 describe("Scaling — domainMapping @ ×250 (5,500 entities)", () => {
 	bench("Focal API  pipe chains (from/elements/match/prop/collect)", () => {
 		focalDomainMapping(fixtures.x250);
+	});
+	bench("Builder    fluent chains (from/elements/match/prop/collect)", () => {
+		builderDomainMapping(fixtures.x250);
 	});
 	bench("imperative  filter/map/find + optional chaining", () => {
 		imperative.domainMapping(fixtures.x250);

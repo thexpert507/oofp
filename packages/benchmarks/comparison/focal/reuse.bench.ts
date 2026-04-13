@@ -44,6 +44,7 @@
 import { bench, describe } from "vitest";
 import { pipe } from "@oofp/core/pipe";
 import { Focal } from "@oofp/focal";
+import { FocalBuilder } from "@oofp/focal/builder";
 import * as Lens from "@oofp/focal/lens";
 import * as Prism from "@oofp/focal/prism";
 import * as Traversal from "@oofp/focal/traversal";
@@ -106,6 +107,21 @@ const profilePrism = Prism.match<IncludedEntity>()("$type", T_PROFILE);
 const profilesTraversal = compose(profilePrism)(eachEntity);
 const firstNameTraversal = compose(firstNameLens)(profilesTraversal);
 
+// ── Pre-built Builder routes (module-level constants) ─────────────────────────
+//
+// The builder chain is constructed once and stored; only the terminal
+// (.get / .collect / .run) is invoked per call.
+
+const firstNameBuilderPrebuilt = FocalBuilder.from<ProfileEntity>().prop("firstName");
+
+const skillsBuilderPrebuilt = FocalBuilder.fromEach<IncludedEntity>().match("$type", T_SKILL);
+
+const profileFirstNameUpdateBuilderPrebuilt = FocalBuilder.from<NormalizedStoreResponse>()
+	.prop("included")
+	.elements()
+	.match("$type", T_PROFILE)
+	.prop("firstName");
+
 // ── Scenario 1: Read simple — get firstName ───────────────────────────────────
 
 describe("Route reuse — read: get firstName from ProfileEntity", () => {
@@ -115,6 +131,14 @@ describe("Route reuse — read: get firstName from ProfileEntity", () => {
 
 	bench("Focal API  pre-built  (route is module-level const)", () => {
 		pipe(firstNameFocalPrebuilt, Focal.get(profile));
+	});
+
+	bench("Builder    idiomatic  (chain built per call)", () => {
+		FocalBuilder.from<ProfileEntity>().prop("firstName").get(profile);
+	});
+
+	bench("Builder    pre-built  (route is module-level const)", () => {
+		firstNameBuilderPrebuilt.get(profile);
 	});
 
 	bench("optics     pre-built  Lens.prop + Lens.view", () => {
@@ -140,6 +164,14 @@ describe("Route reuse — collect: SkillEntity[] from IncludedEntity[]", () => {
 
 	bench("Focal API  pre-built  (route is module-level const)", () => {
 		pipe(skillsFocalPrebuilt, Focal.collect(included));
+	});
+
+	bench("Builder    idiomatic  (chain built per call)", () => {
+		FocalBuilder.fromEach<IncludedEntity>().match("$type", T_SKILL).collect(included);
+	});
+
+	bench("Builder    pre-built  (route is module-level const)", () => {
+		skillsBuilderPrebuilt.collect(included);
 	});
 
 	bench("optics     pre-built  Traversal.each + Prism.match + collect", () => {
@@ -168,6 +200,20 @@ describe("Route reuse — modify: set firstName across all ProfileEntity", () =>
 
 	bench("Focal API  pre-built  (route is module-level const)", () => {
 		pipe(profileFirstNameUpdatePrebuilt, Focal.run(response));
+	});
+
+	bench("Builder    idiomatic  (chain built per call)", () => {
+		FocalBuilder.from<NormalizedStoreResponse>()
+			.prop("included")
+			.elements()
+			.match("$type", T_PROFILE)
+			.prop("firstName")
+			.modify(() => "Updated")
+			.run(response);
+	});
+
+	bench("Builder    pre-built  (route is module-level const)", () => {
+		profileFirstNameUpdateBuilderPrebuilt.modify(() => "Updated").run(response);
 	});
 
 	bench("optics     pre-built  Traversal.compose + modify", () => {

@@ -14,6 +14,7 @@ export default defineConfig({
 				traversal: resolve(__dirname, "lib/traversal.ts"),
 				iso: resolve(__dirname, "lib/iso.ts"),
 				compose: resolve(__dirname, "lib/compose.ts"),
+				builder: resolve(__dirname, "lib/builder/index.ts"),
 			},
 			name: "focal",
 			formats: ["es", "cjs"],
