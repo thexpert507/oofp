@@ -3,6 +3,7 @@ export { compose } from "./compose";
 export { from, fromEach, fromOptic, toOptic } from "./entry-points";
 export { prop } from "./prop";
 export { optional } from "./optional";
+export { optionalProp } from "./optional-prop";
 export { filter } from "./filter";
 export { each } from "./each";
 export { eachRecord } from "./eachRecord";

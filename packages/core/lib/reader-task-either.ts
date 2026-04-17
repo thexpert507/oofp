@@ -152,6 +152,9 @@ export const mapWhithContext =
 		return (ctx: R) => pipe(rte(ctx), TE.map(fn(ctx)));
 	};
 
+export const toVoid = <R, E, A>(rte: ReaderTaskEither<R, E, A>): ReaderTaskEither<R, E, void> =>
+	map(() => undefined)(rte);
+
 export const mapLeft =
 	<E, E2>(fn: Fn<E, E2>) =>
 	<R, A>(rte: ReaderTaskEither<R, E, A>): ReaderTaskEither<R, E2, A> => {

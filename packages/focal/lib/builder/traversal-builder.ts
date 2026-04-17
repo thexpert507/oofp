@@ -3,7 +3,7 @@ import { Focal, Iso, Lens, Prism, URIS } from "../index";
 import type { Focal as IFocal } from "../focal/types";
 import { ArrayKeys } from "@/focal/each";
 import { pipe } from "@oofp/core/pipe";
-import { NullablePaths, SafePaths } from "@/path-types";
+import { NullablePaths, OptionalKeys, SafePaths } from "@/path-types";
 import { PendingUpdate } from "./pending-update";
 import { Fn, Fn2 } from "@oofp/core/function";
 import { RecordKeys } from "@/focal/eachRecord";
@@ -36,6 +36,10 @@ export class TraversalBuilder<S, A> {
 		return new TraversalBuilder(pipe(this.focal, Focal.optional(key)));
 	}
 
+	optionalProp<K extends OptionalKeys<A> & string>(key: K) {
+		return new TraversalBuilder(pipe(this.focal, Focal.optionalProp(key)));
+	}
+
 	match<TK extends keyof StripIndex<A> & string, TV extends string>(
 		target: TK,
 		value: TV & TagValues<A, TK>,
@@ -44,7 +48,7 @@ export class TraversalBuilder<S, A> {
 	}
 
 	modify(f: Fn<A, A>): PendingUpdate<S> {
-		return new PendingUpdate(pipe(this.focal, Focal.modify(f)));
+		return pipe(this.focal, Focal.modify(f));
 	}
 
 	modifyWith<B>(other: LensBuilder<S, B>, f: Fn2<B, A, A>): PendingUpdate<S>;
@@ -56,17 +60,17 @@ export class TraversalBuilder<S, A> {
 		if (focal.optic.tag === Lens.URI || focal.optic.tag === Iso.URI) {
 			const focalToCompose = focal as IFocal<Lens.URI | Iso.URI, S, B>;
 			const fTyped = f as Fn2<B, A, A>;
-			return new PendingUpdate(pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped)));
+			return pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped));
 		}
 		if (focal.optic.tag === Prism.URI) {
 			const focalToCompose = focal as IFocal<Prism.URI, S, B>;
 			const fTyped = f as Fn2<Maybe<B>, A, A>;
-			return new PendingUpdate(pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped)));
+			return pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped));
 		}
 		if (focal.optic.tag === Traversal.URI) {
 			const focalToCompose = focal as IFocal<Traversal.URI, S, B>;
 			const fTyped = f as Fn2<B[], A, A>;
-			return new PendingUpdate(pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped)));
+			return pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped));
 		}
 		throw new Error("Invalid optic kind for modifyWith");
 	}
@@ -76,7 +80,7 @@ export class TraversalBuilder<S, A> {
 	}
 
 	set(a: A): PendingUpdate<S> {
-		return new PendingUpdate(pipe(this.focal, Focal.set(a)));
+		return pipe(this.focal, Focal.set(a));
 	}
 
 	collect(s: S): A[] {
@@ -84,7 +88,7 @@ export class TraversalBuilder<S, A> {
 	}
 
 	find(pred: Fn<A, boolean>) {
-		return new PendingUpdate(pipe(this.focal, Focal.find(pred)));
+		return pipe(this.focal, Focal.find(pred));
 	}
 
 	first<Elem>(this: TraversalBuilder<S, Elem[]>, pred: Fn<Elem, boolean>) {
@@ -92,7 +96,7 @@ export class TraversalBuilder<S, A> {
 	}
 
 	fold<B>(init: B, f: (acc: B, a: A) => B) {
-		return new PendingUpdate(pipe(this.focal, Focal.fold(init, f)));
+		return pipe(this.focal, Focal.fold(init, f));
 	}
 
 	index<Elem>(this: TraversalBuilder<S, Elem[]>, i: number) {

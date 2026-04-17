@@ -193,6 +193,8 @@ export const mapLeft =
   <A>(as: TaskEither<E, A>) =>
     pipe(as, T.map(E.mapLeft(f)))
 
+export const toVoid = <E, A>(te: TaskEither<E, A>): TaskEither<E, void> => map(() => undefined)(te)
+
 export const bimap =
   <E, A, E2, B>(f: Fn<E, E2>, g: Fn<A, B>) =>
   (as: TaskEither<E, A>) =>

@@ -5,7 +5,7 @@ import type { Focal as IFocal } from "../focal/types";
 import { PendingUpdate } from "./pending-update";
 import { pipe } from "@oofp/core/pipe";
 import { Fn, Fn2 } from "@oofp/core/function";
-import { NullablePaths, SafePaths } from "@/path-types";
+import { NullablePaths, OptionalKeys, SafePaths } from "@/path-types";
 import { ArrayKeys } from "@/focal/each";
 import { TraversalBuilder } from "./traversal-builder";
 import { RecordKeys } from "@/focal/eachRecord";
@@ -35,6 +35,10 @@ export class PrismBuilder<S, A> {
 		return new PrismBuilder(pipe(this.focal, Focal.optional(key)));
 	}
 
+	optionalProp<K extends OptionalKeys<A> & string>(key: K) {
+		return new PrismBuilder(pipe(this.focal, Focal.optionalProp(key)));
+	}
+
 	match<TK extends keyof Prism.StripIndex<A> & string, TV extends string>(
 		target: TK,
 		value: TV & Prism.TagValues<A, TK>,
@@ -43,7 +47,7 @@ export class PrismBuilder<S, A> {
 	}
 
 	modify(f: Fn<A, A>): PendingUpdate<S> {
-		return new PendingUpdate(pipe(this.focal, Focal.modify(f)));
+		return pipe(this.focal, Focal.modify(f));
 	}
 
 	modifyWith<B>(other: LensBuilder<S, B>, f: Fn2<B, A, A>): PendingUpdate<S>;
@@ -55,17 +59,17 @@ export class PrismBuilder<S, A> {
 		if (focal.optic.tag === Lens.URI || focal.optic.tag === Iso.URI) {
 			const focalToCompose = focal as IFocal<Lens.URI | Iso.URI, S, B>;
 			const fTyped = f as Fn2<B, A, A>;
-			return new PendingUpdate(pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped)));
+			return pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped));
 		}
 		if (focal.optic.tag === Prism.URI) {
 			const focalToCompose = focal as IFocal<Prism.URI, S, B>;
 			const fTyped = f as Fn2<Maybe<B>, A, A>;
-			return new PendingUpdate(pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped)));
+			return pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped));
 		}
 		if (focal.optic.tag === Traversal.URI) {
 			const focalToCompose = focal as IFocal<Traversal.URI, S, B>;
 			const fTyped = f as Fn2<B[], A, A>;
-			return new PendingUpdate(pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped)));
+			return pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped));
 		}
 		throw new Error("Invalid optic kind for modifyWith");
 	}
@@ -79,7 +83,7 @@ export class PrismBuilder<S, A> {
 	}
 
 	set(a: A): PendingUpdate<S> {
-		return new PendingUpdate(pipe(this.focal, Focal.set(a)));
+		return pipe(this.focal, Focal.set(a));
 	}
 
 	collect(s: S): A[] {
@@ -87,7 +91,7 @@ export class PrismBuilder<S, A> {
 	}
 
 	find(pred: Fn<A, boolean>) {
-		return new PendingUpdate(pipe(this.focal, Focal.find(pred)));
+		return pipe(this.focal, Focal.find(pred));
 	}
 
 	first<Elem>(this: PrismBuilder<S, Elem[]>, pred: Fn<Elem, boolean>) {
@@ -95,7 +99,7 @@ export class PrismBuilder<S, A> {
 	}
 
 	fold<B>(init: B, f: (acc: B, a: A) => B) {
-		return new PendingUpdate(pipe(this.focal, Focal.fold(init, f)));
+		return pipe(this.focal, Focal.fold(init, f));
 	}
 
 	index<Elem>(this: PrismBuilder<S, Elem[]>, i: number) {

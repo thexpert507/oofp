@@ -65,13 +65,13 @@ describe("LensBuilder — prop / get / set / modify", () => {
 	});
 
 	it("set returns a PendingUpdate that produces a new object", () => {
-		const updated = Focal.from<Person>().prop("name").set("Alicia").run(alice);
+		const updated = Focal.from<Person>().prop("name").set("Alicia")(alice);
 		expect(updated.name).toBe("Alicia");
 		expect(updated.age).toBe(30);
 	});
 
 	it("set does not mutate the original", () => {
-		Focal.from<Person>().prop("name").set("Mutant").run(alice);
+		Focal.from<Person>().prop("name").set("Mutant")(alice);
 		expect(alice.name).toBe("Alice");
 	});
 
@@ -79,7 +79,7 @@ describe("LensBuilder — prop / get / set / modify", () => {
 		const updated = Focal.from<Person>()
 			.prop("name")
 			.modify((n) => n.toUpperCase())
-			.run(alice);
+			(alice);
 		expect(updated.name).toBe("ALICE");
 	});
 
@@ -87,18 +87,18 @@ describe("LensBuilder — prop / get / set / modify", () => {
 		const result = Focal.from<Person>()
 			.prop("age")
 			.modify((x) => x)
-			.run(alice);
+			(alice);
 		expect(result).toEqual(alice);
 	});
 
 	it("satisfies GetPut law (set ∘ get = id)", () => {
 		const name = Focal.from<Person>().prop("name").get(alice);
-		const restored = Focal.from<Person>().prop("name").set(name).run(alice);
+		const restored = Focal.from<Person>().prop("name").set(name)(alice);
 		expect(restored).toEqual(alice);
 	});
 
 	it("satisfies PutGet law (get ∘ set = id)", () => {
-		const updated = Focal.from<Person>().prop("name").set("Charlie").run(alice);
+		const updated = Focal.from<Person>().prop("name").set("Charlie")(alice);
 		const name = Focal.from<Person>().prop("name").get(updated);
 		expect(name).toBe("Charlie");
 	});
@@ -120,7 +120,7 @@ describe("LensBuilder — prop / get / set / modify", () => {
 		const result = Focal.from<Person>()
 			.prop("age")
 			.find((a) => a > 20)
-			.run(alice);
+			(alice);
 		expect(result).toEqual(M.just(30));
 	});
 
@@ -128,7 +128,7 @@ describe("LensBuilder — prop / get / set / modify", () => {
 		const result = Focal.from<Person>()
 			.prop("age")
 			.find((a) => a > 100)
-			.run(alice);
+			(alice);
 		expect(result).toEqual(M.nothing());
 	});
 
@@ -136,7 +136,7 @@ describe("LensBuilder — prop / get / set / modify", () => {
 		const result = Focal.from<Person>()
 			.prop("name")
 			.fold("", (acc, n) => acc + n)
-			.run(alice);
+			(alice);
 		expect(result).toBe("Alice");
 	});
 });
@@ -170,7 +170,7 @@ describe("PrismBuilder — optional", () => {
 		const updated = Focal.from<Person>()
 			.optional("metadata")
 			.set({ role: "manager", team: "ops" })
-			.run(alice);
+			(alice);
 		expect(updated.metadata).toEqual({ role: "manager", team: "ops" });
 	});
 
@@ -178,7 +178,7 @@ describe("PrismBuilder — optional", () => {
 		const updated = Focal.from<Person>()
 			.optional("metadata")
 			.set({ role: "ghost", team: "none" })
-			.run(bob);
+			(bob);
 		expect(updated.metadata).toBeNull();
 	});
 
@@ -187,7 +187,7 @@ describe("PrismBuilder — optional", () => {
 			.prop("address")
 			.optional("zip")
 			.modify((z) => z + "!")
-			.run(alice);
+			(alice);
 		expect(updated.address.zip).toBe("12345!");
 	});
 
@@ -196,7 +196,7 @@ describe("PrismBuilder — optional", () => {
 			.prop("address")
 			.optional("zip")
 			.modify((z) => z + "!")
-			.run(bob);
+			(bob);
 		expect(updated.address.zip).toBeNull();
 	});
 
@@ -222,7 +222,7 @@ describe("PrismBuilder — optional", () => {
 		const result = Focal.from<Person>()
 			.optional("metadata")
 			.find((m) => "role" in m)
-			.run(alice);
+			(alice);
 		expect(M.isJust(result)).toBe(true);
 	});
 
@@ -230,7 +230,7 @@ describe("PrismBuilder — optional", () => {
 		const result = Focal.from<Person>()
 			.optional("metadata")
 			.find((m) => "role" in m)
-			.run(bob);
+			(bob);
 		expect(result).toEqual(M.nothing());
 	});
 });
@@ -297,7 +297,7 @@ describe("PrismBuilder — match (dos argumentos)", () => {
 		const updated = Focal.fromEach<Shape>()
 			.match("kind", "circle")
 			.modify((c) => ({ ...c, radius: c.radius * 2 }))
-			.run(shapes);
+			(shapes);
 		expect((updated[0] as { kind: "circle"; radius: number }).radius).toBe(10);
 		expect(updated[1]).toEqual(rect);
 	});
@@ -324,7 +324,7 @@ describe("TraversalBuilder — fromEach", () => {
 		const updated = Focal.fromEach<Person>()
 			.prop("name")
 			.modify((n) => n.toLowerCase())
-			.run(people);
+			(people);
 		expect(updated.map((p) => p.name)).toEqual(["alice", "bob"]);
 	});
 
@@ -332,12 +332,12 @@ describe("TraversalBuilder — fromEach", () => {
 		Focal.fromEach<Person>()
 			.prop("name")
 			.modify((n) => n + "!")
-			.run(people);
+			(people);
 		expect(people[0].name).toBe("Alice");
 	});
 
 	it("set overwrites all focused values", () => {
-		const updated = Focal.fromEach<Person>().prop("age").set(0).run(people);
+		const updated = Focal.fromEach<Person>().prop("age").set(0)(people);
 		expect(updated.map((p) => p.age)).toEqual([0, 0]);
 	});
 
@@ -356,21 +356,21 @@ describe("TraversalBuilder — fromEach", () => {
 	it("find returns Just when element satisfies predicate", () => {
 		const result = Focal.fromEach<Person>()
 			.find((p) => p.name === "Bob")
-			.run(people);
+			(people);
 		expect(result).toEqual(M.just(bob));
 	});
 
 	it("find returns Nothing when no element satisfies predicate", () => {
 		const result = Focal.fromEach<Person>()
 			.find((p) => p.name === "Charlie")
-			.run(people);
+			(people);
 		expect(result).toEqual(M.nothing());
 	});
 
 	it("fold reduces all elements", () => {
 		const total = Focal.fromEach<Person>()
 			.fold(0, (acc, p) => acc + p.age)
-			.run(people);
+			(people);
 		expect(total).toBe(55);
 	});
 });
@@ -390,7 +390,7 @@ describe("TraversalBuilder — filter", () => {
 			.filter((p) => p.age >= 30)
 			.prop("name")
 			.modify((n) => n + "*")
-			.run(people);
+			(people);
 		expect(updated[0].name).toBe("Alice*");
 		expect(updated[1].name).toBe("Bob");
 	});
@@ -400,7 +400,7 @@ describe("TraversalBuilder — filter", () => {
 			.filter((p) => p.age < 30)
 			.prop("age")
 			.set(99)
-			.run(people);
+			(people);
 		expect(updated[0].age).toBe(30); // alice sin cambio
 		expect(updated[1].age).toBe(99); // bob actualizado
 	});
@@ -409,7 +409,7 @@ describe("TraversalBuilder — filter", () => {
 		const result = Focal.fromEach<Person>()
 			.filter((p) => p.age > 0)
 			.modify((x) => x)
-			.run(people);
+			(people);
 		expect(result).toEqual(people);
 	});
 });
@@ -425,7 +425,7 @@ describe("TraversalBuilder — elements", () => {
 			.prop("scores")
 			.elements()
 			.modify((n) => n + 1)
-			.run(alice);
+			(alice);
 		expect(updated.scores).toEqual([96, 88, 73]);
 	});
 });
@@ -452,7 +452,7 @@ describe("TraversalBuilder — match (dos argumentos)", () => {
 			.match("type", "email")
 			.prop("to")
 			.modify((to) => to.toUpperCase())
-			.run(notifications);
+			(notifications);
 		expect(updated[0]).toEqual({ type: "email", to: "A@B.COM" });
 		expect(updated[1]).toEqual({ type: "sms", phone: "555-1234" });
 		expect(updated[2]).toEqual({ type: "email", to: "C@D.COM" });
@@ -513,23 +513,23 @@ describe("fromOptic / toOptic — interop", () => {
 // ============================================================================
 
 describe("PendingUpdate — lazy writes", () => {
-	it(".run(s) aplica el update diferido", () => {
+	it("llamar la función aplica el update diferido", () => {
 		const pending = Focal.from<Person>().prop("name").set("Zara");
-		expect(pending.run(alice).name).toBe("Zara");
+		expect(pending(alice).name).toBe("Zara");
 	});
 
 	it("el mismo PendingUpdate puede aplicarse a diferentes fuentes", () => {
 		const pending = Focal.from<Person>()
 			.prop("age")
 			.modify((a) => a + 1);
-		expect(pending.run(alice).age).toBe(31);
-		expect(pending.run(bob).age).toBe(26);
+		expect(pending(alice).age).toBe(31);
+		expect(pending(bob).age).toBe(26);
 	});
 
 	it("PendingUpdates son componibles via run en cadena", () => {
 		const step1 = Focal.from<Person>().prop("name").set("Carol");
 		const step2 = Focal.from<Person>().prop("age").set(99);
-		const result = step2.run(step1.run(alice));
+		const result = step2(step1(alice));
 		expect(result.name).toBe("Carol");
 		expect(result.age).toBe(99);
 	});
@@ -538,31 +538,149 @@ describe("PendingUpdate — lazy writes", () => {
 describe("PendingUpdate — find y fold retornan PendingUpdate", () => {
 	const people = [alice, bob];
 
-	it("find devuelve PendingUpdate<A[], Maybe<A>> que se ejecuta con .run(s)", () => {
+	it("find devuelve PendingUpdate<A[], Maybe<A>> que se ejecuta con (s)", () => {
 		const result = Focal.fromEach<Person>()
 			.find((p) => p.name === "Bob")
-			.run(people);
+			(people);
 		expect(result).toEqual(M.just(bob));
 	});
 
 	it("find devuelve Nothing via PendingUpdate cuando no hay match", () => {
 		const result = Focal.fromEach<Person>()
 			.find((p) => p.name === "Zara")
-			.run(people);
+			(people);
 		expect(result).toEqual(M.nothing());
 	});
 
-	it("fold devuelve PendingUpdate<A[], B> que se ejecuta con .run(s)", () => {
+	it("fold devuelve PendingUpdate<A[], B> que se ejecuta con (s)", () => {
 		const result = Focal.fromEach<Person>()
 			.fold(0, (acc, p) => acc + p.age)
-			.run(people);
+			(people);
 		expect(result).toBe(55);
 	});
 
 	it("el mismo PendingUpdate de fold puede reutilizarse", () => {
 		const sumAges = Focal.fromEach<Person>().fold(0, (acc, p) => acc + p.age);
-		expect(sumAges.run([alice])).toBe(30);
-		expect(sumAges.run([bob])).toBe(25);
-		expect(sumAges.run([alice, bob])).toBe(55);
+		expect(sumAges([alice])).toBe(30);
+		expect(sumAges([bob])).toBe(25);
+		expect(sumAges([alice, bob])).toBe(55);
+	});
+});
+
+// ============================================================================
+// 6. optionalProp — Lens over nullable/optional property
+// ============================================================================
+
+type Domain = {
+	url: string;
+	activeTab: { tabId: number; title: string } | undefined;
+	badge: string | null;
+};
+
+const domainWithTab: Domain = {
+	url: "https://example.com",
+	activeTab: { tabId: 42, title: "Home" },
+	badge: "new",
+};
+
+const domainWithoutTab: Domain = {
+	url: "https://other.com",
+	activeTab: undefined,
+	badge: null,
+};
+
+describe("LensBuilder — optionalProp (Lens over nullable prop)", () => {
+	it("get reads the field including undefined", () => {
+		expect(Focal.from<Domain>().optionalProp("activeTab").get(domainWithTab)).toEqual({
+			tabId: 42,
+			title: "Home",
+		});
+	});
+
+	it("get returns undefined when field is undefined", () => {
+		expect(Focal.from<Domain>().optionalProp("activeTab").get(domainWithoutTab)).toBeUndefined();
+	});
+
+	it("set(undefined) clears the field", () => {
+		const updated = Focal.from<Domain>().optionalProp("activeTab").set(undefined)(domainWithTab);
+		expect(updated.activeTab).toBeUndefined();
+		expect(updated.url).toBe("https://example.com");
+	});
+
+	it("set(value) replaces the field", () => {
+		const updated = Focal.from<Domain>()
+			.optionalProp("activeTab")
+			.set({ tabId: 99, title: "About" })
+			(domainWithoutTab);
+		expect(updated.activeTab).toEqual({ tabId: 99, title: "About" });
+	});
+
+	it("set(null) works on a null field", () => {
+		const updated = Focal.from<Domain>().optionalProp("badge").set(null)(domainWithTab);
+		expect(updated.badge).toBeNull();
+	});
+
+	it("modify transforms the field value", () => {
+		const updated = Focal.from<Domain>()
+			.optionalProp("badge")
+			.modify((b) => (b ? b.toUpperCase() : b))
+			(domainWithTab);
+		expect(updated.badge).toBe("NEW");
+	});
+
+	it("does not mutate the original", () => {
+		Focal.from<Domain>().optionalProp("activeTab").set(undefined)(domainWithTab);
+		expect(domainWithTab.activeTab).toEqual({ tabId: 42, title: "Home" });
+	});
+
+	it("collect returns a singleton (it is a Lens)", () => {
+		expect(Focal.from<Domain>().optionalProp("activeTab").collect(domainWithTab)).toHaveLength(1);
+	});
+
+	it("has always returns true (it is a Lens)", () => {
+		expect(Focal.from<Domain>().optionalProp("activeTab").has(domainWithoutTab)).toBe(true);
+	});
+});
+
+describe("TraversalBuilder — optionalProp (motivating use-case)", () => {
+	type AppState = { domains: Record<string, Domain> };
+
+	const state: AppState = {
+		domains: {
+			"https://example.com": domainWithTab,
+			"https://other.com": domainWithoutTab,
+		},
+	};
+
+	it("set(undefined) clears activeTab on all matching domains", () => {
+		const tabId = 42;
+		const updated = Focal.from<AppState>()
+			.eachRecord("domains")
+			.filter((d) => d.activeTab?.tabId === tabId)
+			.optionalProp("activeTab")
+			.set(undefined)
+			(state);
+
+		expect(updated.domains["https://example.com"].activeTab).toBeUndefined();
+		expect(updated.domains["https://other.com"].activeTab).toBeUndefined(); // was already undefined
+	});
+
+	it("does not affect non-matching domains", () => {
+		const updated = Focal.from<AppState>()
+			.eachRecord("domains")
+			.filter((d) => d.activeTab?.tabId === 42)
+			.optionalProp("activeTab")
+			.set(undefined)
+			(state);
+
+		expect(updated.domains["https://other.com"].url).toBe("https://other.com");
+		expect(updated.domains["https://example.com"].url).toBe("https://example.com");
+	});
+
+	it("collect gathers the activeTab values across all domains", () => {
+		const tabs = Focal.from<AppState>().eachRecord("domains").optionalProp("activeTab").collect(state);
+		expect(tabs).toHaveLength(2);
+		expect(tabs).toContainEqual({ tabId: 42, title: "Home" });
+		expect(tabs).toContainEqual(undefined);
 	});
 });

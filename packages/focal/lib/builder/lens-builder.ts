@@ -1,5 +1,5 @@
 import * as Lens from "../lens";
-import type { NullablePaths, SafePaths } from "../path-types";
+import type { NullablePaths, OptionalKeys, SafePaths } from "../path-types";
 import { Focal, Iso, Prism, Traversal, URIS } from "../index";
 import type { Focal as IFocal } from "../focal/types";
 import { pipe } from "@oofp/core/pipe";
@@ -36,6 +36,10 @@ export class LensBuilder<S, A> {
 		return new PrismBuilder(pipe(this.focal, Focal.optional(key)));
 	}
 
+	optionalProp<K extends OptionalKeys<A> & string>(key: K) {
+		return new LensBuilder(pipe(this.focal, Focal.optionalProp(key)));
+	}
+
 	match<TK extends keyof StripIndex<A> & string, TV extends string>(
 		target: TK,
 		value: TV & TagValues<A, TK>,
@@ -44,7 +48,7 @@ export class LensBuilder<S, A> {
 	}
 
 	modify(f: Fn<A, A>): PendingUpdate<S> {
-		return new PendingUpdate(pipe(this.focal, Focal.modify(f)));
+		return pipe(this.focal, Focal.modify(f));
 	}
 
 	modifyWith<B>(other: LensBuilder<S, B>, f: Fn2<B, A, A>): PendingUpdate<S>;
@@ -56,17 +60,17 @@ export class LensBuilder<S, A> {
 		if (focal.optic.tag === Lens.URI || focal.optic.tag === Iso.URI) {
 			const focalToCompose = focal as IFocal<Lens.URI | Iso.URI, S, B>;
 			const fTyped = f as Fn2<B, A, A>;
-			return new PendingUpdate(pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped)));
+			return pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped));
 		}
 		if (focal.optic.tag === Prism.URI) {
 			const focalToCompose = focal as IFocal<Prism.URI, S, B>;
 			const fTyped = f as Fn2<Maybe<B>, A, A>;
-			return new PendingUpdate(pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped)));
+			return pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped));
 		}
 		if (focal.optic.tag === Traversal.URI) {
 			const focalToCompose = focal as IFocal<Traversal.URI, S, B>;
 			const fTyped = f as Fn2<B[], A, A>;
-			return new PendingUpdate(pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped)));
+			return pipe(this.focal, Focal.modifyWith(focalToCompose, fTyped));
 		}
 		throw new Error("Invalid optic kind for modifyWith");
 	}
@@ -80,7 +84,7 @@ export class LensBuilder<S, A> {
 	}
 
 	set(a: A): PendingUpdate<S> {
-		return new PendingUpdate(pipe(this.focal, Focal.set(a)));
+		return pipe(this.focal, Focal.set(a));
 	}
 
 	collect(s: S): A[] {
@@ -88,7 +92,7 @@ export class LensBuilder<S, A> {
 	}
 
 	find(pred: Fn<A, boolean>) {
-		return new PendingUpdate(pipe(this.focal, Focal.find(pred)));
+		return pipe(this.focal, Focal.find(pred));
 	}
 
 	first<Elem>(this: LensBuilder<S, Elem[]>, pred: Fn<Elem, boolean>) {
@@ -96,7 +100,7 @@ export class LensBuilder<S, A> {
 	}
 
 	fold<B>(init: B, f: (acc: B, a: A) => B) {
-		return new PendingUpdate(pipe(this.focal, Focal.fold(init, f)));
+		return pipe(this.focal, Focal.fold(init, f));
 	}
 
 	index<Elem>(this: LensBuilder<S, Elem[]>, i: number) {

@@ -7,7 +7,7 @@
  *   PutPut:  set(b)(set(a)(s))     ≡ set(b)(s)   — setting twice is the same as setting once
  */
 
-import type { PathValue, SafePaths } from "./path-types";
+import type { OptionalKeys, PathValue, SafePaths } from "./path-types";
 
 // ---------------------------------------------------------------------------
 // URI — self-registration in the HKT registry
@@ -95,6 +95,31 @@ export function prop(key: string): (lens: Lens<any, any>) => Lens<any, any> {
 			);
 		}, lens);
 	};
+}
+
+/**
+ * Focus on a single nullable/optional property of the current focus.
+ * The focus value is `A[K]` (including `null | undefined`) — nothing is stripped.
+ * Returns a Lens (not a Prism), so `.set(undefined)` and `.set(null)` are valid.
+ *
+ * ```ts
+ * const activeTabLens = pipe(identity<DomainState>(), optionalProp('activeTab'));
+ * // Lens<DomainState, ActiveTab | undefined>
+ * ```
+ */
+export function optionalProp<A, K extends OptionalKeys<A> & string>(
+	key: K,
+): <S>(lens: Lens<S, A>) => Lens<S, A[K]>;
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export function optionalProp(key: string): (lens: Lens<any, any>) => Lens<any, any> {
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	return (lens: Lens<any, any>) =>
+		make(
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			(s: any) => lens.get(s)[key],
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			(v: any) => (s: any) => lens.set({ ...lens.get(s), [key]: v })(s),
+		);
 }
 
 // ---------------------------------------------------------------------------

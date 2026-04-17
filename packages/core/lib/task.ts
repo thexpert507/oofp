@@ -63,6 +63,8 @@ export const join =
 	() =>
 		tta().then((ta) => ta());
 
+export const toVoid = <A>(ta: Task<A>): Task<void> => map(() => undefined)(ta);
+
 export const chain =
 	<A, B>(f: Fn<A, Task<B>>) =>
 	(ta: Task<A>): Task<B> =>

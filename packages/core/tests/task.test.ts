@@ -47,4 +47,10 @@ describe("Task", () => {
     const result = await T.run(taskAdd(1, 2));
     expect(result).toBe(3);
   });
+
+  it("toVoid should discard the value and return undefined", async () => {
+    const task = T.of(42);
+    const result = await T.run(T.toVoid(task));
+    expect(result).toBeUndefined();
+  });
 });

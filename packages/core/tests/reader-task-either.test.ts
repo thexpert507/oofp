@@ -440,4 +440,16 @@ describe("ReaderTaskEither", () => {
 			expect(result).toEqual(E.right([E.right("success"), E.left(404), E.right(true)]));
 		});
 	});
+
+	it("toVoid should discard the value on right", async () => {
+		const rte = RTE.of<unknown, never, number>(42);
+		const result = await RTE.run({})(RTE.toVoid(rte))();
+		expect(result).toEqual(E.right(undefined));
+	});
+
+	it("toVoid should preserve the left on left", async () => {
+		const rte = RTE.left<unknown, string, number>("error");
+		const result = await RTE.run({})(RTE.toVoid(rte))();
+		expect(result).toEqual(E.left("error"));
+	});
 });

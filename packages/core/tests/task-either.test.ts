@@ -206,4 +206,16 @@ describe("TaskEither", () => {
 			}
 		});
 	});
+
+	it("toVoid should discard the value on right", async () => {
+		const te = TE.of<never, number>(42);
+		const result = await TE.run(TE.toVoid(te));
+		expect(result).toEqual(E.right(undefined));
+	});
+
+	it("toVoid should preserve the left on left", async () => {
+		const te = TE.left<string, number>("error");
+		const result = await TE.run(TE.toVoid(te));
+		expect(result).toEqual(E.left("error"));
+	});
 });

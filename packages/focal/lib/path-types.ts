@@ -18,6 +18,18 @@ type NullableKeys<T> = {
 	[K in keyof T]: null extends T[K] ? K : undefined extends T[K] ? K : never;
 }[keyof T];
 
+/**
+ * Keys of T whose value includes `null` or `undefined`.
+ *
+ * Used as the constraint for `optionalProp(key)` — focusing on a nullable/optional
+ * property as a `Lens` (the focus is `T[K]` including the null/undefined, not stripped).
+ *
+ * @example
+ * type K = OptionalKeys<{ name: string; tag: string | undefined; ref: number | null }>;
+ * // "tag" | "ref"
+ */
+export type OptionalKeys<T> = NullableKeys<T>;
+
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
