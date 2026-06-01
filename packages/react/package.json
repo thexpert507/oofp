@@ -1,6 +1,6 @@
 {
 	"name": "@oofp/react",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "Functional React component model using Reader monads from @oofp/core",
 	"license": "MIT",
 	"author": "thexpert507",

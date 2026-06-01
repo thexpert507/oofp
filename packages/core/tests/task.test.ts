@@ -53,4 +53,15 @@ describe("Task", () => {
     const result = await T.run(T.toVoid(task));
     expect(result).toBeUndefined();
   });
+
+  it("timeout should resolve if task completes in time", async () => {
+    const task = T.of(42);
+    const result = await T.run(T.timeout(100)(task));
+    expect(result).toBe(42);
+  });
+
+  it("timeout should reject if task takes too long", async () => {
+    const slow: T.Task<number> = () => new Promise((resolve) => setTimeout(() => resolve(1), 200));
+    await expect(T.run(T.timeout(50)(slow))).rejects.toThrow("Timeout after 50ms");
+  });
 });

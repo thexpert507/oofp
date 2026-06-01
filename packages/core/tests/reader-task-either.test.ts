@@ -8,6 +8,7 @@ import * as RTE from "@/reader-task-either";
 import * as TE from "@/task-either";
 import * as E from "@/either";
 import { pipe } from "@/pipe";
+import { TimeoutError } from "../lib/error/timeout-error";
 
 describe("ReaderTaskEither", () => {
 	it("should create a right ReaderTaskEither", async () => {
@@ -451,5 +452,22 @@ describe("ReaderTaskEither", () => {
 		const rte = RTE.left<unknown, string, number>("error");
 		const result = await RTE.run({})(RTE.toVoid(rte))();
 		expect(result).toEqual(E.left("error"));
+	});
+
+	it("timeout should resolve as Right if RTE completes in time", async () => {
+		const rte = RTE.of<unknown, never, number>(42);
+		const result = await RTE.run({})(RTE.timeout(100)(rte))();
+		expect(result).toEqual(E.right(42));
+	});
+
+	it("timeout should return Left<TimeoutError> if RTE takes too long", async () => {
+		const slow: RTE.ReaderTaskEither<unknown, never, number> = () => () =>
+			new Promise((resolve) => setTimeout(() => resolve(E.right(1)), 200));
+		const result = await RTE.run({})(RTE.timeout(50)(slow))();
+		expect(E.isLeft(result)).toBe(true);
+		if (E.isLeft(result)) {
+			expect(TimeoutError.is(result.value)).toBe(true);
+			expect(result.value.message).toBe("Timeout after 50ms");
+		}
 	});
 });

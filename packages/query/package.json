@@ -1,6 +1,6 @@
 {
 	"name": "@oofp/query",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "Functional query cache library for TypeScript with tag-based invalidation and telemetry",
 	"license": "MIT",
 	"author": "thexpert507",
@@ -31,7 +31,9 @@
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"publishConfig": {
 		"access": "public"
 	},

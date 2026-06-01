@@ -1,6 +1,6 @@
 {
 	"name": "@oofp/core",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Functional programming library for TypeScript with algebraic data types and type-safe utilities",
 	"license": "MIT",
 	"author": "thexpert507",
@@ -69,6 +69,11 @@
 			"types": "./dist/either.d.ts",
 			"import": "./dist/es/either.js",
 			"require": "./dist/cjs/either.cjs"
+		},
+		"./error": {
+			"types": "./dist/error/index.d.ts",
+			"import": "./dist/es/error.js",
+			"require": "./dist/cjs/error.cjs"
 		},
 		"./flow": {
 			"types": "./dist/flow.d.ts",

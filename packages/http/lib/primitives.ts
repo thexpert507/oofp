@@ -152,34 +152,35 @@ export const fetchBase = (input: RequestInput): RTE.ReaderTaskEither<HttpContext
 
 // ============= VALIDACIÓN DE RESPONSE =============
 
-export const validateResponse = (response: Response): E.Either<HttpError, Response> => {
+export const validateResponse = (response: Response, method?: HttpMethod): E.Either<HttpError, Response> => {
   if (response.ok) return E.right(response)
 
   const endpoint = response.url
-  const method = (response as any).method || 'GET'
-  return E.left(HttpError.fromResponse(response, endpoint, method as HttpMethod))
+  return E.left(HttpError.fromResponse(response, endpoint, method ?? 'GET'))
 }
 
 // ============= PARSERS =============
 
 export const toJson =
-  <T>() =>
+  <T>(method?: HttpMethod) =>
   (response: Response): TE.TaskEither<HttpError, T> =>
-    TE.tryCatch((error: unknown) => HttpError.fromError(error, response.url, 'GET'))(
+    TE.tryCatch((error: unknown) => HttpError.fromError(error, response.url, method ?? 'GET'))(
       () => response.json() as Promise<T>,
     )
 
 export const toText =
-  () =>
+  (method?: HttpMethod) =>
   (response: Response): TE.TaskEither<HttpError, string> =>
-    TE.tryCatch((error: unknown) => HttpError.fromError(error, response.url, 'GET'))(() => response.text())
+    TE.tryCatch((error: unknown) => HttpError.fromError(error, response.url, method ?? 'GET'))(() => response.text())
 
 export const toBlob =
-  () =>
+  (method?: HttpMethod) =>
   (response: Response): TE.TaskEither<HttpError, Blob> =>
-    TE.tryCatch((error: unknown) => HttpError.fromError(error, response.url, 'GET'))(() => response.blob())
+    TE.tryCatch((error: unknown) => HttpError.fromError(error, response.url, method ?? 'GET'))(() => response.blob())
 
 export const toArrayBuffer =
-  () =>
+  (method?: HttpMethod) =>
   (response: Response): TE.TaskEither<HttpError, ArrayBuffer> =>
-    TE.tryCatch((error: unknown) => HttpError.fromError(error, response.url, 'GET'))(() => response.arrayBuffer())
+    TE.tryCatch((error: unknown) => HttpError.fromError(error, response.url, method ?? 'GET'))(() =>
+      response.arrayBuffer(),
+    )

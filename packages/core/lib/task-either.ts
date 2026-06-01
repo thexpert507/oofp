@@ -19,6 +19,7 @@ import * as P from './promise'
 import type { Task } from './task'
 import * as T from './task'
 import { concurrency2, concurrencyObject2, sequenceObjectT2, sequenceT2, concurrentSettled2 } from './utils'
+import { TimeoutError } from './error/timeout-error'
 
 export const URI = 'TaskEither'
 export type URI = typeof URI
@@ -334,6 +335,17 @@ export const delay =
       return tea()
     }
   }
+
+export const timeout =
+  (ms: number) =>
+  <Err, A>(te: TaskEither<Err, A>): TaskEither<Err | TimeoutError, A> =>
+  () =>
+    Promise.race([
+      te() as Promise<Either<Err | TimeoutError, A>>,
+      new Promise<Either<Err | TimeoutError, A>>((resolve) =>
+        setTimeout(() => resolve(E.left(TimeoutError.of(ms))), ms),
+      ),
+    ])
 
 type RetryOptions<E = unknown> = {
   maxRetries: number

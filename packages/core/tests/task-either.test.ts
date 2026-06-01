@@ -8,6 +8,7 @@ import * as TE from "../lib/task-either";
 import * as E from "../lib/either";
 import * as T from "../lib/task";
 import { pipe } from "@/pipe";
+import { TimeoutError } from "../lib/error/timeout-error";
 
 describe("TaskEither", () => {
 	it("should create a right TaskEither", async () => {
@@ -217,5 +218,28 @@ describe("TaskEither", () => {
 		const te = TE.left<string, number>("error");
 		const result = await TE.run(TE.toVoid(te));
 		expect(result).toEqual(E.left("error"));
+	});
+
+	it("timeout should resolve as Right if task completes in time", async () => {
+		const te = TE.of<never, number>(42);
+		const result = await TE.run(TE.timeout(100)(te));
+		expect(result).toEqual(E.right(42));
+	});
+
+	it("timeout should return Left<TimeoutError> if task takes too long", async () => {
+		const slow: TE.TaskEither<never, number> = () =>
+			new Promise((resolve) => setTimeout(() => resolve(E.right(1)), 200));
+		const result = await TE.run(TE.timeout(50)(slow));
+		expect(E.isLeft(result)).toBe(true);
+		if (E.isLeft(result)) {
+			expect(TimeoutError.is(result.value)).toBe(true);
+			expect(result.value.message).toBe("Timeout after 50ms");
+		}
+	});
+
+	it("timeout should preserve Left if task fails before timeout", async () => {
+		const te = TE.left<string, number>("domain-error");
+		const result = await TE.run(TE.timeout(100)(te));
+		expect(result).toEqual(E.left("domain-error"));
 	});
 });

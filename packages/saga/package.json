@@ -1,6 +1,6 @@
 {
 	"name": "@oofp/saga",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "Saga pattern utility for transactional operations with automatic compensations using @oofp/core",
 	"license": "MIT",
 	"author": "thexpert507",
@@ -23,7 +23,9 @@
 	"main": "./dist/es/index.js",
 	"module": "./dist/es/index.js",
 	"types": "./dist/index.d.ts",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"publishConfig": {
 		"access": "public"
 	},

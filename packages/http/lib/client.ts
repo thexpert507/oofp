@@ -63,12 +63,14 @@ const request = <T>(
     const parser: (response: Response) => TE.TaskEither<HttpError, T> = options.parser
       ? options.parser
       : enhancedCtx.unwrapEithers
-        ? eitherAwareParser<T>()
-        : toJson<T>()
+        ? eitherAwareParser<T>(input.method)
+        : toJson<T>(input.method)
 
     return pipe(
       fetchBase({ ...input, headers: options.headers })(enhancedCtx),
-      TE.chain((response) => (options.skipValidation ? TE.right(response) : TE.fromEither(validateResponse(response)))),
+      TE.chain((response) =>
+        options.skipValidation ? TE.right(response) : TE.fromEither(validateResponse(response, input.method)),
+      ),
       TE.chain(parser),
     )
   }
@@ -111,13 +113,13 @@ export const del = <T = unknown>(url: string, options?: RequestOptions<T>) =>
 // ============= SPECIALIZED PARSERS =============
 
 export const getJson = <T = unknown>(url: string, options?: Omit<RequestOptions<T>, 'parser'>) =>
-  get<T>(url, { ...options, parser: toJson<T>() })
+  get<T>(url, { ...options, parser: toJson<T>('GET') })
 
 export const getText = (url: string, options?: Omit<RequestOptions<string>, 'parser'>) =>
-  get<string>(url, { ...options, parser: toText() })
+  get<string>(url, { ...options, parser: toText('GET') })
 
 export const getBlob = (url: string, options?: Omit<RequestOptions<Blob>, 'parser'>) =>
-  get<Blob>(url, { ...options, parser: toBlob() })
+  get<Blob>(url, { ...options, parser: toBlob('GET') })
 
 export const getArrayBuffer = (url: string, options?: Omit<RequestOptions<ArrayBuffer>, 'parser'>) =>
-  get<ArrayBuffer>(url, { ...options, parser: toArrayBuffer() })
+  get<ArrayBuffer>(url, { ...options, parser: toArrayBuffer('GET') })

@@ -5,6 +5,7 @@ import * as E from '@oofp/core/either'
 import * as M from '@oofp/core/maybe'
 import { pipe } from '@oofp/core/pipe'
 import * as TE from '@oofp/core/task-either'
+import type { HttpMethod } from './primitives'
 import { HttpError } from './primitives'
 
 /**
@@ -63,10 +64,11 @@ export const isEither = <L, R>(data: unknown): data is E.Either<L, R> | LegacyEi
  * Si no es un Either, retorna el valor tal cual
  */
 export const eitherAwareParser =
-  <T>() =>
+  <T>(method?: HttpMethod) =>
   (response: Response): TE.TaskEither<HttpError, T> => {
+    const m = method ?? 'GET'
     return pipe(
-      TE.tryCatch((error: unknown) => HttpError.fromError(error, response.url, 'GET'))(() => response.json()),
+      TE.tryCatch((error: unknown) => HttpError.fromError(error, response.url, m))(() => response.json()),
       TE.chain((data: unknown) => {
         const normalized = normalizeEither<unknown, T>(data)
 
@@ -76,7 +78,7 @@ export const eitherAwareParser =
             E.mapLeft((error) =>
               HttpError.of({
                 endpoint: response.url,
-                method: 'GET',
+                method: m,
                 statusCode: response.status,
                 message: String(error),
                 cause: error,
@@ -95,8 +97,9 @@ export const eitherAwareParser =
  * Ejemplo: withEitherUnwrapping(toJson<User>())
  */
 export const withEitherUnwrapping =
-  <T>(baseParser: (response: Response) => TE.TaskEither<HttpError, T>) =>
+  <T>(baseParser: (response: Response) => TE.TaskEither<HttpError, T>, method?: HttpMethod) =>
   (response: Response): TE.TaskEither<HttpError, T> => {
+    const m = method ?? 'GET'
     return pipe(
       baseParser(response),
       TE.chain((data: unknown) => {
@@ -108,7 +111,7 @@ export const withEitherUnwrapping =
             E.mapLeft((error) =>
               HttpError.of({
                 endpoint: response.url,
-                method: 'GET',
+                method: m,
                 statusCode: response.status,
                 message: String(error),
                 cause: error,

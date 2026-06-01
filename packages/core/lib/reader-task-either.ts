@@ -18,6 +18,7 @@ import { concurrency3, concurrencyObject3, concurrentSettled3 } from "./utils";
 import { sequenceObjectT3 } from "./utils/sequence-object3";
 import { sequenceT3 } from "./utils/sequence-t3";
 import type { Simplify } from "./utils/simplify";
+import { TimeoutError } from "./error/timeout-error";
 
 export const URI = "ReaderTaskEither";
 export type URI = typeof URI;
@@ -311,6 +312,12 @@ export const delay =
 	<R, E, A>(rte: ReaderTaskEither<R, E, A>): ReaderTaskEither<R, E, A> => {
 		return (ctx: R) => pipe(rte(ctx), TE.delay(ms));
 	};
+
+export const timeout =
+	(ms: number) =>
+	<R, E, A>(rte: ReaderTaskEither<R, E, A>): ReaderTaskEither<R, E | TimeoutError, A> =>
+	(ctx: R) =>
+		TE.timeout(ms)(rte(ctx));
 
 interface RTEF
 	extends Monad3<URI>,

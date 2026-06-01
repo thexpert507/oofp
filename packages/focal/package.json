@@ -1,6 +1,6 @@
 {
 	"name": "@oofp/focal",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "Composable optics for TypeScript — Lens, Prism, Traversal and Iso, pipe/flow friendly",
 	"license": "MIT",
 	"author": "thexpert507",
@@ -22,7 +22,9 @@
 		"composable"
 	],
 	"type": "module",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"publishConfig": {
 		"access": "public"
 	},

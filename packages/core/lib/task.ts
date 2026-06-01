@@ -95,6 +95,17 @@ export const delay =
 	() =>
 		ta().then((a) => new Promise((resolve) => setTimeout(() => resolve(a), ms)));
 
+export const timeout =
+	(ms: number) =>
+	<A>(ta: Task<A>): Task<A> =>
+	() =>
+		Promise.race([
+			ta(),
+			new Promise<never>((_, reject) =>
+				setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms),
+			),
+		]);
+
 export const fold =
 	<A, R>(g: Fn<unknown, R>, f: Fn<A, R>) =>
 	(ta: Task<A>): Promise<R> =>

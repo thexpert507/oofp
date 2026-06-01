@@ -71,22 +71,20 @@ export const withFormData = (data: Record<string, string | Blob>): Partial<Reque
 
 // ============= RESPONSE INTERCEPTORS =============
 
-export const validateResponse = (response: Response): E.Either<HttpError, Response> => {
+export const validateResponse = (response: Response, method?: HttpMethod): E.Either<HttpError, Response> => {
   if (response.ok) return E.right(response)
 
   const endpoint = response.url
-  const method = (response as any).method || ('GET' as HttpMethod)
-  return E.left(HttpErrorConstructor.fromResponse(response, endpoint, method))
+  return E.left(HttpErrorConstructor.fromResponse(response, endpoint, method ?? 'GET'))
 }
 
 export const validateStatusWith =
-  (predicate: (status: number) => boolean) =>
+  (predicate: (status: number) => boolean, method?: HttpMethod) =>
   (response: Response): E.Either<HttpError, Response> => {
     if (predicate(response.status)) return E.right(response)
 
     const endpoint = response.url
-    const method = (response as any).method || ('GET' as HttpMethod)
-    return E.left(HttpErrorConstructor.fromResponse(response, endpoint, method))
+    return E.left(HttpErrorConstructor.fromResponse(response, endpoint, method ?? 'GET'))
   }
 
 export const adaptEither = <L, R>(either: E.Either<L, R>): E.Either<L, R> => either

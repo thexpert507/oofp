@@ -15,6 +15,7 @@ export default defineConfig({
 				function: resolve(__dirname, "lib/function.ts"),
 				curry: resolve(__dirname, "lib/curry.ts"),
 				either: resolve(__dirname, "lib/either.ts"),
+			error: resolve(__dirname, "lib/error/index.ts"),
 				flow: resolve(__dirname, "lib/flow.ts"),
 				id: resolve(__dirname, "lib/id.ts"),
 				list: resolve(__dirname, "lib/list.ts"),
