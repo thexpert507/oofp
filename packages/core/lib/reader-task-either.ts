@@ -34,7 +34,7 @@ declare module "./URIS3" {
 export const id = <R, E, A>(rte: ReaderTaskEither<R, E, A>) => rte;
 
 export const of =
-	<R, E, A>(a: A): ReaderTaskEither<R, E, A> =>
+	<R, A, E = never>(a: A): ReaderTaskEither<R, E, A> =>
 	() =>
 		TE.of(a);
 
@@ -51,7 +51,7 @@ export const left =
 export const right =
 	<R, E, A>(a: A): ReaderTaskEither<R, E, A> =>
 	() =>
-		TE.of(a);
+		TE.right(a);
 
 export const fromReader =
 	<R, A>(r: R.Reader<R, A>): ReaderTaskEither<R, never, A> =>

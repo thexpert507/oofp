@@ -44,5 +44,11 @@ export default defineConfig({
 		rollupOptions: { external: [] },
 	},
 	plugins: [dts({ tsconfigPath: resolve(__dirname, "tsconfig.build.json") })],
-	test: { watch: false },
+	test: {
+		watch: false,
+		typecheck: {
+			enabled: true,
+			tsconfig: "./tsconfig.vitest.json",
+		},
+	},
 });

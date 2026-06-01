@@ -46,7 +46,7 @@ describe("TaskEither", () => {
 
 	it("should chain over a left TaskEither", async () => {
 		const taskEither = TE.left<string, number>("error");
-		const chained = TE.chain((n: number) => TE.of(n + 1))(taskEither);
+		const chained = TE.chain((n: number) => TE.of<number, string>(n + 1))(taskEither);
 		const result = await TE.run(chained);
 		expect(result).toEqual(E.left("error"));
 	});
@@ -209,7 +209,7 @@ describe("TaskEither", () => {
 	});
 
 	it("toVoid should discard the value on right", async () => {
-		const te = TE.of<never, number>(42);
+		const te = TE.of<number>(42);
 		const result = await TE.run(TE.toVoid(te));
 		expect(result).toEqual(E.right(undefined));
 	});
@@ -221,7 +221,7 @@ describe("TaskEither", () => {
 	});
 
 	it("timeout should resolve as Right if task completes in time", async () => {
-		const te = TE.of<never, number>(42);
+		const te = TE.of<number>(42);
 		const result = await TE.run(TE.timeout(100)(te));
 		expect(result).toEqual(E.right(42));
 	});

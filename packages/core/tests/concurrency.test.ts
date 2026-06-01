@@ -50,10 +50,10 @@ describe("Concurrency", () => {
 
 		const concurrently = concurrency3(RTE.RTE)({ concurrency: 2, delay: 500 });
 
-		const rte1 = RTE.of<Config, never, number>(1);
-		const rte2 = RTE.of<Logger, never, string>("hello");
-		const rte3 = RTE.of<Config, never, boolean>(true);
-		const rte4 = RTE.of<Logger, never, number>(42);
+		const rte1 = RTE.of<Config, number>(1);
+		const rte2 = RTE.of<Logger, string>("hello");
+		const rte3 = RTE.of<Config, boolean>(true);
+		const rte4 = RTE.of<Logger, number>(42);
 
 		// biome-ignore lint/suspicious/noExplicitAny: necesario para el test
 		const arr = [rte1, rte2, rte3, rte4] as any;
@@ -73,9 +73,9 @@ describe("Concurrency", () => {
 
 		const concurrently = concurrency3(RTE.RTE)({ concurrency: 2 });
 
-		const rte1 = RTE.of<Config, string, number>(1);
+		const rte1 = RTE.of<Config, number, string>(1);
 		const rte2 = RTE.left<Config, string, string>("error occurred");
-		const rte3 = RTE.of<Config, string, boolean>(true);
+		const rte3 = RTE.of<Config, boolean, string>(true);
 
 		// biome-ignore lint/suspicious/noExplicitAny: necesario para el test
 		const arr = [rte1, rte2, rte3] as any;

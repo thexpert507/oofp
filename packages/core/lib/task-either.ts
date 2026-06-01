@@ -75,11 +75,11 @@ export const identity =
 
 export const run = <E, A>(task: TaskEither<E, A>): Promise<Either<E, A>> => task()
 
-export const of = <E, A>(a: A): TaskEither<E, A> => T.of(E.right(a))
+export const of = <A, E = never>(a: A): TaskEither<E, A> => T.of(E.right(a))
 
 export const left = <E, A>(e: E): TaskEither<E, A> => T.of(E.left(e))
 
-export const right = of
+export const right = <E, A>(a: A): TaskEither<E, A> => T.of(E.right(a))
 
 export const rightTask = <E, A>(ta: Task<A>): TaskEither<E, A> => T.map(E.right)(ta)
 

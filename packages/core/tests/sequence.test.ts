@@ -60,9 +60,9 @@ describe("Sequence array", () => {
     type C2 = { c2: string };
     type C3 = { c3: boolean };
 
-    const rte1 = RTE.of<C1, never, number>(1);
-    const rte2 = RTE.of<C2, never, string>("2");
-    const rte3 = RTE.of<C3, never, boolean>(true);
+    const rte1 = RTE.of<C1, number>(1);
+    const rte2 = RTE.of<C2, string>("2");
+    const rte3 = RTE.of<C3, boolean>(true);
     const arr = [rte1, rte2, rte3];
 
     const result = sequenceT(RTE)(arr as any);

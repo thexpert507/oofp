@@ -31,9 +31,9 @@ describe("ReaderTaskEither", () => {
 		type C1 = { a: number };
 		type C2 = { b: number };
 		type C3 = { c: number };
-		const rte1 = RTE.of<C1, never, number>(1);
-		const rte2 = RTE.of<C2, never, number>(2);
-		const rte3 = RTE.of<C3, never, number>(3);
+		const rte1 = RTE.of<C1, number>(1);
+		const rte2 = RTE.of<C2, number>(2);
+		const rte3 = RTE.of<C3, number>(3);
 
 		const result = await RTE.sequenceObject({ a: rte1, b: rte2, c: rte3 })({ a: 1, b: 2, c: 3 })();
 
@@ -44,9 +44,9 @@ describe("ReaderTaskEither", () => {
 		type C1 = { a: number };
 		type C2 = { b: number };
 		type C3 = { c: number };
-		const rte1 = RTE.of<C1, never, number>(1);
-		const rte2 = RTE.of<C2, never, number>(2);
-		const rte3 = RTE.of<C3, never, number>(3);
+		const rte1 = RTE.of<C1, number>(1);
+		const rte2 = RTE.of<C2, number>(2);
+		const rte3 = RTE.of<C3, number>(3);
 
 		const result = await RTE.sequence([rte1, rte2, rte3])({ a: 1, b: 2, c: 3 })();
 
@@ -370,9 +370,9 @@ describe("ReaderTaskEither", () => {
 	describe("concurrentSettled", () => {
 		it("should wrap success results in Right and errors in Left", async () => {
 			type Context = Record<string, never>;
-			const rte1 = RTE.of<Context, never, number>(1);
+			const rte1 = RTE.of<Context, number>(1);
 			const rte2 = RTE.left<Context, string, number>("error");
-			const rte3 = RTE.of<Context, never, number>(3);
+			const rte3 = RTE.of<Context, number>(3);
 
 			const result = await pipe(
 				[rte1, rte2, rte3],
@@ -408,7 +408,7 @@ describe("ReaderTaskEither", () => {
 
 			const makeRTE = (id: number) =>
 				pipe(
-					RTE.of<Context, never, number>(id),
+					RTE.of<Context, number>(id),
 					RTE.tap(() => {
 						concurrent++;
 						maxConcurrent = Math.max(maxConcurrent, concurrent);
@@ -428,9 +428,9 @@ describe("ReaderTaskEither", () => {
 
 		it("should work with different error and success types", async () => {
 			type Context = Record<string, never>;
-			const rte1 = RTE.of<Context, never, string>("success");
+			const rte1 = RTE.of<Context, string>("success");
 			const rte2 = RTE.left<Context, number, string>(404);
-			const rte3 = RTE.of<Context, never, boolean>(true);
+			const rte3 = RTE.of<Context, boolean>(true);
 
 			const result = await pipe(
 				[rte1, rte2, rte3],
@@ -443,7 +443,7 @@ describe("ReaderTaskEither", () => {
 	});
 
 	it("toVoid should discard the value on right", async () => {
-		const rte = RTE.of<unknown, never, number>(42);
+		const rte = RTE.of<unknown, number>(42);
 		const result = await RTE.run({})(RTE.toVoid(rte))();
 		expect(result).toEqual(E.right(undefined));
 	});
@@ -455,7 +455,7 @@ describe("ReaderTaskEither", () => {
 	});
 
 	it("timeout should resolve as Right if RTE completes in time", async () => {
-		const rte = RTE.of<unknown, never, number>(42);
+		const rte = RTE.of<unknown, number>(42);
 		const result = await RTE.run({})(RTE.timeout(100)(rte))();
 		expect(result).toEqual(E.right(42));
 	});

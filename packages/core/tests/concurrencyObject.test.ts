@@ -77,11 +77,11 @@ describe("Concurrency Object", () => {
 		const concurrently = concurrencyObject3(RTE.RTE)({ concurrency: 2, delay: 500 });
 
 		const tasks = {
-			user: RTE.of<Config, never, { name: string; age: number }>({ name: "John", age: 30 }),
-			posts: RTE.of<Logger, never, Array<{ id: number; title: string }>>([
+			user: RTE.of<Config, { name: string; age: number }>({ name: "John", age: 30 }),
+			posts: RTE.of<Logger, Array<{ id: number; title: string }>>([
 				{ id: 1, title: "Hello" },
 			]),
-			settings: RTE.of<Config, never, { theme: string }>({ theme: "dark" }),
+			settings: RTE.of<Config, { theme: string }>({ theme: "dark" }),
 		};
 
 		// biome-ignore lint/suspicious/noExplicitAny: necesario para el test
@@ -107,9 +107,9 @@ describe("Concurrency Object", () => {
 		const concurrently = concurrencyObject3(RTE.RTE)({ concurrency: 2 });
 
 		const tasks = {
-			user: RTE.of<Config, string, { name: string }>({ name: "John" }),
+			user: RTE.of<Config, { name: string }, string>({ name: "John" }),
 			posts: RTE.left<Config, string, unknown>("Failed to fetch posts"),
-			settings: RTE.of<Config, string, { theme: string }>({ theme: "dark" }),
+			settings: RTE.of<Config, { theme: string }, string>({ theme: "dark" }),
 		};
 
 		// biome-ignore lint/suspicious/noExplicitAny: necesario para el test
