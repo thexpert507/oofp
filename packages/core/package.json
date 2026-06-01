@@ -1,6 +1,6 @@
 {
 	"name": "@oofp/core",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Functional programming library for TypeScript with algebraic data types and type-safe utilities",
 	"license": "MIT",
 	"author": "thexpert507",

@@ -1,6 +1,6 @@
 {
 	"name": "@oofp/http",
-	"version": "1.0.1",
+	"version": "2.0.0",
 	"description": "Functional HTTP client library for TypeScript using @oofp/core",
 	"license": "MIT",
 	"author": "thexpert507",
