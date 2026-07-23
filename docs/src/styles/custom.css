@@ -672,9 +672,47 @@ header,
 }
 
 /* ------------------------------------------------------------------
-   12. Starlight & Blog Sidebar Link Overlap Fix
+   12. Starlight Theme Black Blog Sidebar Fix (CRITICAL TARGETING)
    ------------------------------------------------------------------ */
 
+.container-sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.25rem !important;
+}
+
+.container-sidebar-entry {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+}
+
+.container-group-link {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.65rem !important;
+  margin-top: 0.35rem !important;
+}
+
+.entry-link,
+a.entry-link,
+.container-group-link a,
+.container-group-link .entry-link {
+  display: block !important;
+  position: relative !important;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  line-height: 1.45 !important;
+  font-size: 0.875rem !important;
+  padding: 0.35rem 0.5rem !important;
+  margin: 0 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* Standard Starlight fallback for sidebar list items */
 aside ul,
 .aside ul,
 .sidebar-content ul,
