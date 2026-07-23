@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/@oofp/query.svg?style=flat)](https://www.npmjs.com/package/@oofp/query)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0+-blue.svg)](https://www.typescriptlang.org/)
 
 Functional query and cache library for TypeScript. Declarative data fetching with tag-based cache invalidation, request deduplication, pluggable backends, and built-in telemetry. Built on `@oofp/core`.
 

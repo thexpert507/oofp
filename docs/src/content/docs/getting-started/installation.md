@@ -33,7 +33,7 @@ pnpm add @oofp/react
 
 ## Requirements
 
-- **TypeScript** 5.0 or higher
+- **TypeScript** 7.0 or higher
 - **Node.js** 18 or higher (for ESM support)
 - `"strict": true` in your `tsconfig.json` is recommended
 

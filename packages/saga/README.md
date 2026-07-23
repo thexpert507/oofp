@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/@oofp/saga.svg?style=flat)](https://www.npmjs.com/package/@oofp/saga)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0+-blue.svg)](https://www.typescriptlang.org/)
 
 Saga pattern for distributed transactions with automatic compensations. Define multi-step operations where each step has an action and an optional rollback -- if any step fails, all previously completed steps are compensated in reverse order (LIFO). Built on `@oofp/core` using `ReaderTaskEither`.
 

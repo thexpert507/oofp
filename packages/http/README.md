@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/@oofp/http.svg?style=flat)](https://www.npmjs.com/package/@oofp/http)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0+-blue.svg)](https://www.typescriptlang.org/)
 
 Functional HTTP client library for TypeScript. Built on top of `@oofp/core` using `ReaderTaskEither` for composable, type-safe HTTP calls.
 

@@ -5,7 +5,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@oofp/core.svg)](https://www.npmjs.com/package/@oofp/core)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/@oofp/core)](https://bundlephobia.com/package/@oofp/core)
 [![GitHub Stars](https://img.shields.io/github/stars/thexpert507/oofp.svg?style=social&label=Star)](https://github.com/thexpert507/oofp)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0+-blue.svg)](https://www.typescriptlang.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/thexpert507/oofp/pulls)
 
 A functional programming library for TypeScript providing algebraic data types and utilities for writing elegant, type-safe functional code. The foundation of the [@oofp monorepo](https://github.com/thexpert507/oofp).

@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/@oofp/react.svg?style=flat)](https://www.npmjs.com/package/@oofp/react)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0+-blue.svg)](https://www.typescriptlang.org/)
 
 Functional React component model using Reader monads from `@oofp/core`. Separates dependency injection (context) from component props, with support for both stateless and stateful components.
 

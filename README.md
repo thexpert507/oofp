@@ -1,7 +1,7 @@
 # OOFP
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-339933.svg?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![npm](https://img.shields.io/npm/v/@oofp/core.svg?label=%40oofp%2Fcore&color=blue)](https://www.npmjs.com/package/@oofp/core)
 [![npm downloads](https://img.shields.io/npm/dm/@oofp/core.svg?color=blue)](https://www.npmjs.com/package/@oofp/core)
