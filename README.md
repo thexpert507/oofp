@@ -367,15 +367,9 @@ Managed with [pnpm workspaces](https://pnpm.io/workspaces). Versioning and publi
 
 ## Contributing
 
-Contributions are welcome. Please:
+Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed instructions on local development, test commands, code style, and submitting pull requests.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
-Use `pnpm changeset` to create a changeset for your changes before submitting.
+Check out open issues marked with [`good first issue`](https://github.com/thexpert507/oofp/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or [`help wanted`](https://github.com/thexpert507/oofp/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) to get started!
 
 ## License
 
