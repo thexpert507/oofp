@@ -1,53 +1,130 @@
 /* ============================================================
-   OOFP Landing Page — Custom Styles
-   Compatible with starlight-theme-black
+   OOFP — Custom Theme System (Proposal 1: Deep Indigo & Electric Cyan)
+   Dual-Theme Optimization for Dark Mode & Light Mode
+   Full-Width Nav Bar Line & Conditional Landing Page Nav Constraint
    ============================================================ */
 
+:root {
+  --radius: 0.5rem;
+  --bg-main: #0b0d17;
+  --bg-surface: #131728;
+  --border: rgba(99, 102, 241, 0.18);
+  --muted: rgba(19, 23, 40, 0.6);
+  --muted-foreground: #94a3b8;
+  --foreground: #f8fafc;
+  --accent-purple: #6366f1; /* Deep Indigo */
+  --accent-blue: #06b6d4;   /* Electric Cyan */
+  --accent-cyan: #38bdf8;   /* Cyan Highlight */
+}
+
+:root[data-theme='light'] {
+  --bg-main: #f8fafc;
+  --bg-surface: #ffffff;
+  --border: rgba(226, 232, 240, 0.9);
+  --muted: rgba(241, 245, 249, 0.8);
+  --muted-foreground: #475569;
+  --foreground: #0f172a;
+  --accent-purple: #4338ca; /* Deeper Indigo for light mode contrast */
+  --accent-blue: #0284c7;   /* Deeper Cyan/Blue for light mode contrast */
+  --accent-cyan: #0369a1;
+}
+
 /* ------------------------------------------------------------------
-   0. Container constraints for splash page sections
-   The splash template renders content without the theme's
-   ContainerSection wrapper, so we add our own max-width + padding
-   to match the theme's container behavior.
+   Theme-Specific Background & Surface Overrides
    ------------------------------------------------------------------ */
 
+:root[data-theme='dark'] body,
+:root[data-theme='dark'] .layout,
+:root[data-theme='dark'] .layout__header {
+  background-color: var(--bg-main) !important;
+}
+
+:root[data-theme='dark'] .ai-card,
+:root[data-theme='dark'] .install-bar {
+  background-color: var(--bg-surface) !important;
+}
+
+:root[data-theme='light'] body,
+:root[data-theme='light'] .layout,
+:root[data-theme='light'] .layout__header {
+  background-color: var(--bg-main) !important;
+}
+
+:root[data-theme='light'] .ai-card,
+:root[data-theme='light'] .install-bar,
+:root[data-theme='light'] .footer-badge {
+  background-color: var(--bg-surface) !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+}
+
+:root[data-theme='light'] .install-bar {
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* ------------------------------------------------------------------
+   1. Full-Width Header Bar & Conditional Landing Page Alignment
+   ------------------------------------------------------------------ */
+
+header,
+.layout__header {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+:has(.hero) .container__header,
+:has(.install-section) .container__header,
+.hero,
 .install-section,
 .comparison-section,
 .feature-section,
 .ai-section,
 .packages-section,
 .footer-cta {
-  max-width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  max-width: 1240px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
   width: 100%;
   box-sizing: border-box;
 }
 
 @media (min-width: 80rem) {
+  :has(.hero) .container__header,
+  :has(.install-section) .container__header,
+  .hero,
   .install-section,
   .comparison-section,
   .feature-section,
   .ai-section,
   .packages-section,
   .footer-cta {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
   }
 }
 
 /* ------------------------------------------------------------------
-   1. Hero — Animated gradient title
+   2. Hero — Animated gradient title (Dark & Light Mode Optimized)
    ------------------------------------------------------------------ */
 
 .hero-gradient {
-  background: linear-gradient(135deg, #3b82f6, #7c3aed, #3b82f6);
+  background: linear-gradient(135deg, #6366f1, #06b6d4, #38bdf8, #6366f1);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: gradient-shift 6s ease infinite;
+}
+
+:root[data-theme='light'] .hero-gradient {
+  background: linear-gradient(135deg, #4338ca, #0284c7, #4f46e5);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 @keyframes gradient-shift {
@@ -57,89 +134,138 @@
 }
 
 /* ------------------------------------------------------------------
-   2. Install bar + badges
+   3. Install Section + Badges
    ------------------------------------------------------------------ */
 
 .install-section {
-  text-align: center;
-  padding-top: 2rem;
-  padding-bottom: 1rem;
+  padding-top: 1.5rem;
+  padding-bottom: 2rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100%;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 .install-bar {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: var(--muted);
+  justify-content: center;
+  gap: 0.6rem;
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0.6rem 1.2rem;
+  padding: 0.65rem 1.4rem;
   font-family: var(--sl-font-mono);
   font-size: 0.95rem;
   color: var(--foreground);
   user-select: all;
   cursor: text;
+  box-shadow: 0 4px 20px rgba(11, 13, 23, 0.4);
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 .install-bar .prompt {
-  color: var(--muted-foreground);
+  color: var(--accent-blue);
+  font-weight: bold;
   user-select: none;
 }
 
 .badge-strip {
-  display: inline-flex;
+  display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  justify-content: center !important;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
   flex-wrap: wrap;
+  width: 100%;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 .badge-strip img {
   height: 22px;
-  display: block;
+  width: auto;
+  display: inline-block !important;
+  vertical-align: middle;
+  margin: 0 !important;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
+}
+
+.badge-strip img:hover {
+  transform: translateY(-1px);
 }
 
 /* ------------------------------------------------------------------
-   3. Before/After code comparison section
+   4. Section Titles & Subtitles (CENTERED + Inline Anchor Links Fix)
+   ------------------------------------------------------------------ */
+
+.comparison-section .sl-heading-wrapper,
+.ai-section .sl-heading-wrapper,
+.packages-section .sl-heading-wrapper,
+.footer-cta .sl-heading-wrapper {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: 100%;
+  display: block !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.comparison-section h2,
+.ai-section h2,
+.packages-section h2,
+.footer-cta h2 {
+  display: inline !important;
+  text-align: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.comparison-section > p,
+.ai-section > p,
+.footer-cta > p {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 0.5rem !important;
+  max-width: 46rem;
+  color: var(--muted-foreground);
+  line-height: 1.65;
+  font-size: 1.05rem;
+}
+
+.comparison-section h3,
+.comparison-section .sl-heading-wrapper.level-h3 {
+  text-align: center !important;
+}
+
+/* ------------------------------------------------------------------
+   5. Before/After code comparison section
    ------------------------------------------------------------------ */
 
 .comparison-section {
-  max-width: 52rem;
   padding-top: 2.5rem;
   padding-bottom: 1rem;
 }
 
-.comparison-section h2 {
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
-.comparison-section > p {
-  text-align: center;
-  color: var(--muted-foreground);
-  margin-bottom: 1.5rem;
-}
-
-.comparison-section h3 {
-  text-align: center;
-}
-
 /* ------------------------------------------------------------------
-   4. Feature sections — alternating text + code layout
+   6. Feature sections — alternating text + code layout (TOP ALIGNED)
    ------------------------------------------------------------------ */
 
 .feature-section {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
-  align-items: start;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
+  align-items: start !important;
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
   border-top: 1px solid var(--border);
 }
 
@@ -147,7 +273,7 @@
   .feature-section {
     grid-template-columns: 1fr 1fr;
     gap: 3rem;
-    align-items: center;
+    align-items: start !important;
   }
 
   .feature-section.reverse .feature-text {
@@ -159,8 +285,21 @@
   }
 }
 
+.feature-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.feature-text > *:first-child,
+.feature-code > *:first-child,
+.feature-code pre,
+.feature-code .expressive-code {
+  margin-top: 0 !important;
+}
+
 .feature-text h3 {
-  margin-top: 0;
+  margin-top: 0.25rem !important;
   font-size: 1.35rem;
 }
 
@@ -175,39 +314,66 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #7c3aed;
+  color: var(--accent-blue);
   margin-bottom: 0.5rem;
 }
 
-:root[data-theme='light'] .feature-label {
-  color: #6d28d9;
+/* ------------------------------------------------------------------
+   7. Code Blocks Fixed Max-Height & Vertical Scrollbar
+   ------------------------------------------------------------------ */
+
+.sl-markdown-content pre,
+.expressive-code pre,
+.comparison-section pre,
+.feature-section pre,
+.expressive-code .frame {
+  max-height: 380px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-blue) transparent;
+}
+
+.sl-markdown-content pre::-webkit-scrollbar,
+.expressive-code pre::-webkit-scrollbar,
+.comparison-section pre::-webkit-scrollbar,
+.feature-section pre::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.sl-markdown-content pre::-webkit-scrollbar-thumb,
+.expressive-code pre::-webkit-scrollbar-thumb,
+.comparison-section pre::-webkit-scrollbar-thumb,
+.feature-section pre::-webkit-scrollbar-thumb {
+  background: var(--accent-blue);
+  border-radius: 4px;
+}
+
+.sl-markdown-content pre::-webkit-scrollbar-track,
+.expressive-code pre::-webkit-scrollbar-track,
+.comparison-section pre::-webkit-scrollbar-track,
+.feature-section pre::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* ------------------------------------------------------------------
-   5. "Built for the AI era" section
+   8. "Built for the AI era" Cards Grid
    ------------------------------------------------------------------ */
 
 .ai-section {
-  padding-top: 2.5rem;
-  padding-bottom: 1.5rem;
+  padding-top: 3rem;
+  padding-bottom: 2.5rem;
   border-top: 1px solid var(--border);
-}
-
-.ai-section h2 {
-  text-align: center;
-  margin-bottom: 0.25rem;
-}
-
-.ai-section > p {
-  text-align: center;
-  color: var(--muted-foreground);
-  margin-bottom: 2rem;
 }
 
 .ai-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
+  width: 100%;
+  margin-top: 1.5rem;
+  align-items: stretch;
 }
 
 @media (min-width: 50rem) {
@@ -217,21 +383,32 @@
 }
 
 .ai-card {
-  background: var(--muted);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1.5rem;
+  padding: 1.75rem 1.5rem;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
   height: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-card:hover {
+  border-color: rgba(6, 182, 212, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
 }
 
 .ai-card h3 {
-  margin-top: 0;
-  font-size: 1.05rem;
-  display: flex;
+  margin-top: 0 !important;
+  font-size: 1.1rem;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  width: 100%;
 }
 
 .ai-card p {
@@ -244,39 +421,264 @@
 
 .ai-icon {
   font-size: 1.3rem;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
 }
 
 /* ------------------------------------------------------------------
-   6. Packages section
+   9. Packages section
    ------------------------------------------------------------------ */
 
 .packages-section {
-  padding-top: 2rem;
-  padding-bottom: 1rem;
+  padding-top: 2.5rem;
+  padding-bottom: 1.5rem;
   border-top: 1px solid var(--border);
-}
-
-.packages-section h2 {
-  text-align: center;
-  margin-bottom: 1.5rem;
 }
 
 /* ------------------------------------------------------------------
-   7. Footer CTA
+   10. Footer CTA & LinkButton Styling (Dark & Light Mode)
    ------------------------------------------------------------------ */
 
 .footer-cta {
-  text-align: center;
-  padding-top: 2.5rem;
-  padding-bottom: 1rem;
+  padding-top: 3rem;
+  padding-bottom: 2rem;
   border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
-.footer-cta h2 {
-  margin-bottom: 0.5rem;
+.sl-markdown-content a.sl-link-button,
+.sl-link-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.6rem !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  line-height: 1 !important;
+  padding: 0.85rem 2rem !important;
+  border-radius: 9999px !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  margin-top: 1.25rem;
+  box-sizing: border-box;
+  align-self: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
-.footer-cta p {
+.sl-markdown-content a.sl-link-button[data-variant='primary'],
+.sl-link-button[data-variant='primary'] {
+  background: linear-gradient(135deg, #4f46e5, #0891b2) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35) !important;
+}
+
+:root[data-theme='light'] .sl-markdown-content a.sl-link-button[data-variant='primary'],
+:root[data-theme='light'] .sl-link-button[data-variant='primary'] {
+  background: linear-gradient(135deg, #4338ca, #0284c7) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(67, 56, 202, 0.2) !important;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.25) !important;
+}
+
+.sl-markdown-content a.sl-link-button[data-variant='primary']:hover,
+.sl-link-button[data-variant='primary']:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 6px 28px rgba(6, 182, 212, 0.55) !important;
+  color: #ffffff !important;
+  filter: brightness(1.1);
+}
+
+:root[data-theme='light'] .sl-markdown-content a.sl-link-button[data-variant='primary']:hover,
+:root[data-theme='light'] .sl-link-button[data-variant='primary']:hover {
+  box-shadow: 0 6px 24px rgba(2, 132, 199, 0.4) !important;
+  filter: brightness(1.05);
+}
+
+.sl-link-button svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------
+   11. Premium Custom Landing Footer
+   ------------------------------------------------------------------ */
+
+.landing-footer {
+  margin-top: 4rem;
+  padding-top: 4rem;
+  padding-bottom: 2.5rem;
+  border-top: 1px solid var(--border);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.landing-footer-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+}
+
+@media (min-width: 54rem) {
+  .landing-footer-inner {
+    grid-template-columns: 1.2fr 2fr;
+    gap: 4rem;
+  }
+}
+
+.landing-footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.landing-footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--foreground);
+}
+
+.landing-footer-logo .logo-icon {
+  background: linear-gradient(135deg, #6366f1, #06b6d4);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.35rem;
+  letter-spacing: 0.05em;
+}
+
+.landing-footer-desc {
   color: var(--muted-foreground);
-  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-top: 0.85rem;
+  margin-bottom: 1.25rem;
+  max-width: 24rem;
+  text-align: left !important;
+}
+
+.landing-footer-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.footer-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+
+.landing-footer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+@media (max-width: 40rem) {
+  .landing-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+}
+
+.footer-col h4 {
+  margin-top: 0 !important;
+  margin-bottom: 1rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--foreground);
+  text-align: left !important;
+}
+
+.footer-col ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.footer-col li {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.footer-col a {
+  color: var(--muted-foreground) !important;
+  text-decoration: none !important;
+  font-size: 0.92rem;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+}
+
+.footer-col a:hover {
+  color: var(--accent-blue) !important;
+  transform: translateX(2px);
+}
+
+.landing-footer-bottom {
+  max-width: 1240px;
+  margin: 3rem auto 0 auto;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.landing-footer-bottom p {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  margin: 0;
+  text-align: center !important;
+}
+
+.landing-footer-bottom a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+}
+
+.landing-footer-bottom a:hover {
+  color: var(--accent-blue);
+}
+
+/* Hide default Starlight footer edit-link on landing page */
+:has(.hero) footer.footer,
+:has(.hero) .sl-markdown-content + footer,
+:has(.install-section) footer.footer {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------------
+   12. Footer borders clean up
+   ------------------------------------------------------------------ */
+
+footer,
+.footer,
+.container-wrapper,
+.container-wrapper footer {
+  border-left: none !important;
+  border-right: none !important;
 }
