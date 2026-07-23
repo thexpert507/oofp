@@ -672,7 +672,46 @@ header,
 }
 
 /* ------------------------------------------------------------------
-   12. Footer borders clean up
+   12. Starlight & Blog Sidebar Link Overlap Fix
+   ------------------------------------------------------------------ */
+
+aside ul,
+.aside ul,
+.sidebar-content ul,
+nav[aria-label="Sidebar"] ul {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.35rem !important;
+}
+
+aside ul li,
+.aside ul li,
+.sidebar-content ul li,
+nav[aria-label="Sidebar"] ul li {
+  display: block !important;
+  position: relative !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  float: none !important;
+}
+
+aside ul li a,
+.aside ul li a,
+.sidebar-content ul li a,
+nav[aria-label="Sidebar"] ul li a {
+  display: block !important;
+  height: auto !important;
+  position: relative !important;
+  line-height: 1.45 !important;
+  padding: 0.35rem 0.6rem !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* ------------------------------------------------------------------
+   13. Footer borders clean up
    ------------------------------------------------------------------ */
 
 footer,
