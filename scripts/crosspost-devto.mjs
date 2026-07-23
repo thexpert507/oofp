@@ -14,6 +14,23 @@ if (!DEVTO_API_KEY) {
   process.exit(1);
 }
 
+// Convert relative markdown links to absolute URLs pointing to oofp.pages.dev
+function convertLinksToAbsolute(markdown) {
+  return markdown.replace(/\]\(([^)]+)\)/g, (match, href) => {
+    const trimmedHref = href.trim();
+    if (
+      trimmedHref.startsWith("http://") ||
+      trimmedHref.startsWith("https://") ||
+      trimmedHref.startsWith("mailto:") ||
+      trimmedHref.startsWith("#")
+    ) {
+      return match;
+    }
+    const cleanPath = trimmedHref.replace(/^(\.|\/)+/, "");
+    return `](https://oofp.pages.dev/${cleanPath})`;
+  });
+}
+
 // Simple YAML frontmatter parser
 function parseFrontmatter(content) {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
@@ -77,7 +94,7 @@ async function fetchExistingArticles() {
   }
 }
 
-async function publishArticle(file) {
+async function publishOrUpdateArticle(file, existingArticleMap) {
   const filePath = path.join(BLOG_DIR, file);
   const rawContent = fs.readFileSync(filePath, "utf-8");
   const { data, body } = parseFrontmatter(rawContent);
@@ -88,39 +105,67 @@ async function publishArticle(file) {
   const description = data.excerpt || data.description || "";
   const tags = formatTags(Array.isArray(data.tags) ? data.tags : []);
 
-  console.log(`\n📌 Processing: "${title}"`);
-  console.log(`   Canonical URL: ${canonicalUrl}`);
-  console.log(`   Tags: ${tags.join(", ")}`);
+  // Transform relative links to absolute URLs pointing to oofp.pages.dev
+  const processedBody = convertLinksToAbsolute(body);
+
+  const existingArticle = existingArticleMap.get(canonicalUrl);
 
   const payload = {
     article: {
       title,
-      published: true, // Set to true to publish immediately
-      body_markdown: body,
+      published: true,
+      body_markdown: processedBody,
       canonical_url: canonicalUrl,
       description,
       tags,
     },
   };
 
-  const res = await fetch("https://dev.to/api/articles", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-key": DEVTO_API_KEY,
-    },
-    body: JSON.stringify(payload),
-  });
+  if (existingArticle) {
+    console.log(`\n🔄 Updating existing article ID ${existingArticle.id}: "${title}"`);
+    console.log(`   Canonical URL: ${canonicalUrl}`);
 
-  if (!res.ok) {
-    const errText = await res.text();
-    console.error(`❌ Failed to publish "${title}". Error (${res.status}): ${errText}`);
-    return null;
+    const res = await fetch(`https://dev.to/api/articles/${existingArticle.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": DEVTO_API_KEY,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`❌ Failed to update "${title}". Error (${res.status}): ${errText}`);
+      return null;
+    }
+
+    const updatedData = await res.json();
+    console.log(`✅ Updated successfully! URL: ${updatedData.url}`);
+    return updatedData;
+  } else {
+    console.log(`\n📌 Creating new article: "${title}"`);
+    console.log(`   Canonical URL: ${canonicalUrl}`);
+
+    const res = await fetch("https://dev.to/api/articles", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": DEVTO_API_KEY,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`❌ Failed to publish "${title}". Error (${res.status}): ${errText}`);
+      return null;
+    }
+
+    const publishedData = await res.json();
+    console.log(`✅ Published successfully! URL: ${publishedData.url}`);
+    return publishedData;
   }
-
-  const publishedData = await res.json();
-  console.log(`✅ Published successfully! URL: ${publishedData.url}`);
-  return publishedData;
 }
 
 async function main() {
@@ -133,23 +178,20 @@ async function main() {
   console.log(`🔍 Found ${files.length} blog post(s) in ${BLOG_DIR}`);
 
   const existing = await fetchExistingArticles();
-  const existingUrls = new Set(existing.map((a) => a.canonical_url));
+  const existingArticleMap = new Map();
+  for (const item of existing) {
+    if (item.canonical_url) {
+      existingArticleMap.set(item.canonical_url, item);
+    }
+  }
 
   for (const file of files) {
-    const slug = file.replace(/\.mdx?$/, "");
-    const canonicalUrl = `https://oofp.pages.dev/blog/${slug}/`;
-
-    if (existingUrls.has(canonicalUrl)) {
-      console.log(`\n⏭️ Skipping "${slug}" - Already published on DEV.to with canonical URL.`);
-      continue;
-    }
-
-    await publishArticle(file);
-    // Rate limit delay: wait 2 seconds between posts
+    await publishOrUpdateArticle(file, existingArticleMap);
+    // Rate limit delay: wait 2 seconds between updates/posts
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
-  console.log("\n✨ Crossposting check complete!");
+  console.log("\n✨ Crossposting check & update complete!");
 }
 
 main().catch((err) => {
