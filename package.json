@@ -17,7 +17,8 @@
 		"playground": "pnpm --filter @oofp/playground run dev",
 		"docs:dev": "pnpm --filter @oofp/docs run dev",
 		"docs:build": "pnpm --filter @oofp/docs run build",
-		"docs:preview": "pnpm --filter @oofp/docs run preview"
+		"docs:preview": "pnpm --filter @oofp/docs run preview",
+		"crosspost:devto": "node scripts/crosspost-devto.mjs"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": ["@biomejs/biome", "esbuild", "sharp"]

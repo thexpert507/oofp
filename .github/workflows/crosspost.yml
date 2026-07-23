@@ -1,0 +1,36 @@
+name: Crosspost to DEV.to
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/src/content/docs/blog/**'
+      - 'scripts/crosspost-devto.mjs'
+  workflow_dispatch:
+
+jobs:
+  crosspost:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run DEV.to crossposting script
+        env:
+          DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+        run: pnpm crosspost:devto
