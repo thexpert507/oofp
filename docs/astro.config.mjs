@@ -5,14 +5,52 @@ import starlightBlog from "starlight-blog";
 import starlightThemeBlack from "starlight-theme-black";
 import sitemap from "@astrojs/sitemap";
 
+const siteUrl = "https://oofp.pages.dev";
+
+const softwareStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "@id": `${siteUrl}/#software`,
+  name: "OOFP",
+  alternateName: "Object-Oriented Functional Programming",
+  description:
+    "A TypeScript functional-programming ecosystem with type-safe algebraic data types, composition utilities, optics, HTTP utilities, query caching, sagas, and React integrations.",
+  url: siteUrl,
+  codeRepository: "https://github.com/thexpert507/oofp",
+  license: "https://opensource.org/licenses/MIT",
+  programmingLanguage: ["TypeScript", "JavaScript"],
+  runtimePlatform: "Node.js",
+  author: {
+    "@type": "Person",
+    name: "Adriel Avila",
+    url: "https://github.com/thexpert507",
+  },
+  hasPart: [
+    {
+      "@type": "SoftwareSourceCode",
+      name: "@oofp/core",
+      version: "0.3.0",
+      url: "https://www.npmjs.com/package/@oofp/core",
+    },
+    ...["focal", "http", "query", "saga", "react"].map((name) => ({
+      "@type": "SoftwareSourceCode",
+      name: `@oofp/${name}`,
+      version: "2.0.0",
+      url: `https://www.npmjs.com/package/@oofp/${name}`,
+    })),
+  ],
+};
+
 // https://astro.build/config
 export default defineConfig({
-  site: "https://oofp.pages.dev",
+  site: siteUrl,
   integrations: [
     starlight({
       title: "OOFP",
       description:
         "Object-Oriented Functional Programming ecosystem for TypeScript. Algebraic data types, dependency injection, and type-safe composition.",
+      lastUpdated: true,
+      routeMiddleware: "./src/routeData.ts",
       social: [
         {
           icon: "github",
@@ -38,8 +76,15 @@ export default defineConfig({
           tag: "meta",
           attrs: {
             property: "og:image",
-            content: "https://oofp.pages.dev/og-image.png",
+            content: `${siteUrl}/og-image.png`,
           },
+        },
+        {
+          tag: "script",
+          attrs: {
+            type: "application/ld+json",
+          },
+          content: JSON.stringify(softwareStructuredData),
         },
         {
           tag: "meta",

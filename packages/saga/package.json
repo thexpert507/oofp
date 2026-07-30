@@ -4,6 +4,10 @@
 	"description": "Saga pattern utility for transactional operations with automatic compensations using @oofp/core",
 	"license": "MIT",
 	"author": "thexpert507",
+	"homepage": "https://oofp.pages.dev/packages/saga/",
+	"bugs": {
+		"url": "https://github.com/thexpert507/oofp/issues"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/thexpert507/oofp.git",
@@ -23,9 +27,7 @@
 	"main": "./dist/es/index.js",
 	"module": "./dist/es/index.js",
 	"types": "./dist/index.d.ts",
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"publishConfig": {
 		"access": "public"
 	},

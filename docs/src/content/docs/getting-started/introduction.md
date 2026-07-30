@@ -39,9 +39,10 @@ OOFP provides algebraic data types that make these problems impossible:
 
 ## Ecosystem
 
-OOFP is a monorepo with 5 packages:
+OOFP is a monorepo with 6 packages:
 
 - **[@oofp/core](/packages/core/)** — Foundation: all monads, composition, collections, type classes
+- **[@oofp/focal](/packages/focal/)** — Composable optics for immutable data access and updates
 - **[@oofp/http](/packages/http/)** — HTTP client built on ReaderTaskEither
 - **[@oofp/query](/packages/query/)** — Query cache with TTL and invalidation
 - **[@oofp/saga](/packages/saga/)** — Saga pattern for transactional workflows

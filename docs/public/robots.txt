@@ -1,0 +1,7 @@
+# OOFP documentation is public and may be used for search and
+# retrieval-based answers. Model training is not permitted.
+User-agent: *
+Allow: /
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+
+Sitemap: https://oofp.pages.dev/sitemap-index.xml
