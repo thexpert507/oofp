@@ -4,7 +4,7 @@
 	"description": "Functional programming library for TypeScript with algebraic data types and type-safe utilities",
 	"license": "MIT",
 	"author": "thexpert507",
-	"homepage": "https://oofp.pages.dev/packages/core/",
+	"homepage": "https://oofp.js.org/packages/core/",
 	"bugs": {
 		"url": "https://github.com/thexpert507/oofp/issues"
 	},

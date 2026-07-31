@@ -798,7 +798,7 @@ El benchmark de runtime compara velocidad de ejecución. Hay un segundo análisi
 
 El imperativo requiere 7 type guards manuales — uno por variante de la unión — y 9 llamadas a `.filter()`. Cada guard es una string hardcodeada que el compilador no puede verificar. La Focal API elimina ambas categorías de boilerplate: `Focal.match` deriva la discriminación del tipo TypeScript directamente.
 
-Para el análisis completo con metodología y datos crudos, ver la [referencia de benchmarks](https://oofp.pages.dev/reference/benchmarks#oofpfocal--optics-vs-imperative) en la documentación del sitio.
+Para el análisis completo con metodología y datos crudos, ver la [referencia de benchmarks](https://oofp.js.org/reference/benchmarks#oofpfocal--optics-vs-imperative) en la documentación del sitio.
 
 ### Escalabilidad
 

@@ -6,11 +6,11 @@
 [![npm](https://img.shields.io/npm/v/@oofp/core.svg?label=%40oofp%2Fcore&color=blue)](https://www.npmjs.com/package/@oofp/core)
 [![npm downloads](https://img.shields.io/npm/dm/@oofp/core.svg?color=blue)](https://www.npmjs.com/package/@oofp/core)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/thexpert507/oofp/pulls)
-[![Docs](https://img.shields.io/badge/docs-oofp.pages.dev-purple)](https://oofp.pages.dev)
+[![Docs](https://img.shields.io/badge/docs-oofp.js.org-purple)](https://oofp.js.org)
 
 **Object-Oriented Functional Programming** ecosystem for TypeScript. Type-safe algebraic data types, monadic composition, and functional patterns for real-world applications.
 
-> **[Read the full documentation](https://oofp.pages.dev)**
+> **[Read the full documentation](https://oofp.js.org)**
 
 ## Why OOFP?
 
@@ -134,9 +134,9 @@ Benchmarks run on Node.js 20 using [Vitest bench](https://vitest.dev/guide/featu
 
 Comparative benchmarks against fp-ts, Effect, neverthrow, purify-ts, hand-rolled OOP `Result<T,E>`, and imperative try/catch. Run `pnpm --filter @oofp/benchmarks bench` to reproduce.
 
-> [Full analysis with methodology and detailed results](https://oofp.pages.dev/reference/benchmarks/)
+> [Full analysis with methodology and detailed results](https://oofp.js.org/reference/benchmarks/)
 
-> **About the OOP baseline:** The hand-rolled `Result<T,E>` class is included as a **theoretical performance ceiling** -- the fastest possible FP-style abstraction with zero overhead. It is **not a real library**: no npm package, no documentation, no type inference beyond basic generics, no ecosystem, and every advanced pattern (concurrency control, fire-and-forget, middleware, error accumulation) must be implemented manually per-project. See [Why not hand-roll your own?](https://oofp.pages.dev/reference/benchmarks/#why-not-hand-roll-your-own) for a detailed comparison.
+> **About the OOP baseline:** The hand-rolled `Result<T,E>` class is included as a **theoretical performance ceiling** -- the fastest possible FP-style abstraction with zero overhead. It is **not a real library**: no npm package, no documentation, no type inference beyond basic generics, no ecosystem, and every advanced pattern (concurrency control, fire-and-forget, middleware, error accumulation) must be implemented manually per-project. See [Why not hand-roll your own?](https://oofp.js.org/reference/benchmarks/#why-not-hand-roll-your-own) for a detailed comparison.
 
 #### Creation (ops/sec -- higher is better)
 
@@ -196,7 +196,7 @@ Comparative benchmarks against fp-ts, Effect, neverthrow, purify-ts, hand-rolled
 
 Benchmarks simulating production orchestration patterns found in real applications: sequential pipelines, parallel fetches, controlled concurrency, error recovery chains, middleware wrappers, and fire-and-forget side effects. All async operations use `Promise.resolve()` to measure **orchestration overhead**, not I/O time.
 
-> [Full orchestration analysis](https://oofp.pages.dev/reference/benchmarks/#5-orchestration-scenarios)
+> [Full orchestration analysis](https://oofp.js.org/reference/benchmarks/#5-orchestration-scenarios)
 
 #### Sequential Pipeline -- 7 async steps (ops/sec)
 
@@ -360,7 +360,7 @@ oofp/
     saga/         @oofp/saga        Saga transactions (peer: core)
     react/        @oofp/react       React integration (peer: core, react)
     benchmarks/   @oofp/benchmarks  Comparative benchmarks (private)
-  docs/           @oofp/docs        Documentation site (oofp.pages.dev)
+  docs/           @oofp/docs        Documentation site (oofp.js.org)
 ```
 
 Managed with [pnpm workspaces](https://pnpm.io/workspaces). Versioning and publishing via [Changesets](https://github.com/changesets/changesets).

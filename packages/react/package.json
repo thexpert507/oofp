@@ -4,7 +4,7 @@
 	"description": "Functional React component model using Reader monads from @oofp/core",
 	"license": "MIT",
 	"author": "thexpert507",
-	"homepage": "https://oofp.pages.dev/packages/react/",
+	"homepage": "https://oofp.js.org/packages/react/",
 	"bugs": {
 		"url": "https://github.com/thexpert507/oofp/issues"
 	},

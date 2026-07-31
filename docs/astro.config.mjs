@@ -5,7 +5,7 @@ import starlightBlog from "starlight-blog";
 import starlightThemeBlack from "starlight-theme-black";
 import sitemap from "@astrojs/sitemap";
 
-const siteUrl = "https://oofp.pages.dev";
+const siteUrl = "https://oofp.js.org";
 
 const softwareStructuredData = {
   "@context": "https://schema.org",

@@ -1,6 +1,6 @@
 import { defineRouteMiddleware } from "@astrojs/starlight/route-data";
 
-const siteUrl = new URL("https://oofp.pages.dev");
+const siteUrl = new URL("https://oofp.js.org");
 
 type EntryData = {
 	title: string;

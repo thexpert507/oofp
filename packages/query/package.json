@@ -4,7 +4,7 @@
 	"description": "Functional query cache library for TypeScript with tag-based invalidation and telemetry",
 	"license": "MIT",
 	"author": "thexpert507",
-	"homepage": "https://oofp.pages.dev/packages/query/",
+	"homepage": "https://oofp.js.org/packages/query/",
 	"bugs": {
 		"url": "https://github.com/thexpert507/oofp/issues"
 	},

@@ -14,7 +14,7 @@ if (!DEVTO_API_KEY) {
   process.exit(1);
 }
 
-// Convert relative markdown links to absolute URLs pointing to oofp.pages.dev
+// Convert relative markdown links to absolute URLs pointing to oofp.js.org
 function convertLinksToAbsolute(markdown) {
   return markdown.replace(/\]\(([^)]+)\)/g, (match, href) => {
     const trimmedHref = href.trim();
@@ -27,7 +27,7 @@ function convertLinksToAbsolute(markdown) {
       return match;
     }
     const cleanPath = trimmedHref.replace(/^(\.|\/)+/, "");
-    return `](https://oofp.pages.dev/${cleanPath})`;
+    return `](https://oofp.js.org/${cleanPath})`;
   });
 }
 
@@ -101,11 +101,11 @@ async function publishOrUpdateArticle(file, existingArticleMap) {
 
   const slug = file.replace(/\.mdx?$/, "");
   const title = data.title || slug;
-  const canonicalUrl = `https://oofp.pages.dev/blog/${slug}/`;
+  const canonicalUrl = `https://oofp.js.org/blog/${slug}/`;
   const description = data.excerpt || data.description || "";
   const tags = formatTags(Array.isArray(data.tags) ? data.tags : []);
 
-  // Transform relative links to absolute URLs pointing to oofp.pages.dev
+  // Transform relative links to absolute URLs pointing to oofp.js.org
   const processedBody = convertLinksToAbsolute(body);
 
   const existingArticle = existingArticleMap.get(canonicalUrl);

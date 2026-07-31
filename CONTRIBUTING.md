@@ -47,7 +47,7 @@ From the root directory, you can run:
 - `pnpm lint` – Check formatting and code quality using [Biome](https://biomejs.dev).
 - `pnpm format` – Auto-format code using Biome.
 - `pnpm bench` – Run performance benchmarks.
-- `pnpm docs:dev` – Start local dev server for the documentation website (`https://oofp.pages.dev`).
+- `pnpm docs:dev` – Start local dev server for the documentation website (`https://oofp.js.org`).
 - `pnpm playground` – Start the interactive playground environment.
 
 ---

@@ -2,34 +2,34 @@
 
 > OOFP (Object-Oriented Functional Programming) is an open-source TypeScript ecosystem for type-safe functional programming. This file points agents to the project's canonical documentation and primary sources.
 
-The official documentation is https://oofp.pages.dev and the source repository is https://github.com/thexpert507/oofp. OOFP is licensed under the MIT License.
+The official documentation is https://oofp.js.org and the source repository is https://github.com/thexpert507/oofp. OOFP is licensed under the MIT License.
 
 ## Start here
 
-- [Introduction](https://oofp.pages.dev/getting-started/introduction/): What OOFP is, the problems it addresses, and its design principles.
-- [Installation](https://oofp.pages.dev/getting-started/installation/): Package installation and runtime requirements.
-- [Quick start](https://oofp.pages.dev/getting-started/quick-start/): A first type-safe functional pipeline.
+- [Introduction](https://oofp.js.org/getting-started/introduction/): What OOFP is, the problems it addresses, and its design principles.
+- [Installation](https://oofp.js.org/getting-started/installation/): Package installation and runtime requirements.
+- [Quick start](https://oofp.js.org/getting-started/quick-start/): A first type-safe functional pipeline.
 - [GitHub repository](https://github.com/thexpert507/oofp): Canonical source code, issues, releases, and contribution history.
-- [Benchmarks](https://oofp.pages.dev/reference/benchmarks/): Methodology, comparisons, limitations, and reproducible commands.
+- [Benchmarks](https://oofp.js.org/reference/benchmarks/): Methodology, comparisons, limitations, and reproducible commands.
 
 ## Packages
 
-- [@oofp/core](https://oofp.pages.dev/packages/core/): Algebraic data types and composition primitives including Maybe, Either, Task, TaskEither, Reader, ReaderTaskEither, IO, State, pipe, and flow. Current documented version: 0.3.0.
-- [@oofp/focal](https://oofp.pages.dev/packages/focal/): Composable Lens, Prism, Traversal, and Iso optics. Current documented version: 2.0.0.
-- [@oofp/http](https://oofp.pages.dev/packages/http/): Functional HTTP client with typed errors, interceptors, retries, and timeouts. Current documented version: 2.0.0.
-- [@oofp/query](https://oofp.pages.dev/packages/query/): Functional query cache with invalidation, deduplication, and telemetry. Current documented version: 2.0.0.
-- [@oofp/saga](https://oofp.pages.dev/packages/saga/): Saga orchestration with automatic compensations. Current documented version: 2.0.0.
-- [@oofp/react](https://oofp.pages.dev/packages/react/): Experimental functional React integrations. Current documented version: 2.0.0.
+- [@oofp/core](https://oofp.js.org/packages/core/): Algebraic data types and composition primitives including Maybe, Either, Task, TaskEither, Reader, ReaderTaskEither, IO, State, pipe, and flow. Current documented version: 0.3.0.
+- [@oofp/focal](https://oofp.js.org/packages/focal/): Composable Lens, Prism, Traversal, and Iso optics. Current documented version: 2.0.0.
+- [@oofp/http](https://oofp.js.org/packages/http/): Functional HTTP client with typed errors, interceptors, retries, and timeouts. Current documented version: 2.0.0.
+- [@oofp/query](https://oofp.js.org/packages/query/): Functional query cache with invalidation, deduplication, and telemetry. Current documented version: 2.0.0.
+- [@oofp/saga](https://oofp.js.org/packages/saga/): Saga orchestration with automatic compensations. Current documented version: 2.0.0.
+- [@oofp/react](https://oofp.js.org/packages/react/): Experimental functional React integrations. Current documented version: 2.0.0.
 
 ## Core guides
 
-- [Composition](https://oofp.pages.dev/core/composition/): pipe, flow, and compose.
-- [Maybe](https://oofp.pages.dev/core/maybe/): Optional values without null or undefined.
-- [Either](https://oofp.pages.dev/core/either/): Typed synchronous error handling.
-- [TaskEither](https://oofp.pages.dev/core/task-either/): Typed asynchronous operations that may fail.
-- [ReaderTaskEither](https://oofp.pages.dev/core/reader-task-either/): Dependency injection with typed asynchronous errors.
-- [Error handling](https://oofp.pages.dev/guides/error-handling/): Practical Either and TaskEither patterns.
-- [Production patterns](https://oofp.pages.dev/advanced/production-patterns/): Application-level integration patterns.
+- [Composition](https://oofp.js.org/core/composition/): pipe, flow, and compose.
+- [Maybe](https://oofp.js.org/core/maybe/): Optional values without null or undefined.
+- [Either](https://oofp.js.org/core/either/): Typed synchronous error handling.
+- [TaskEither](https://oofp.js.org/core/task-either/): Typed asynchronous operations that may fail.
+- [ReaderTaskEither](https://oofp.js.org/core/reader-task-either/): Dependency injection with typed asynchronous errors.
+- [Error handling](https://oofp.js.org/guides/error-handling/): Practical Either and TaskEither patterns.
+- [Production patterns](https://oofp.js.org/advanced/production-patterns/): Application-level integration patterns.
 
 ## Source-of-truth policy
 

@@ -6,3 +6,6 @@
 
 /*.xml
   Cache-Control: public, max-age=3600
+
+https://oofp.pages.dev/*
+  X-Robots-Tag: noindex
