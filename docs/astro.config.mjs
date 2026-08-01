@@ -90,7 +90,7 @@ export default defineConfig({
           tag: "meta",
           attrs: {
             name: "google-site-verification",
-            content: "PoFu1k_QVj_QgKFTKyJIi_ShRrHH4m5PoGfaWl3p46k",
+            content: "F8ikLV_ALd7h6weEHfMN2ERKnbg1sSFYe1TJP_j3dRE",
           },
         },
         {
