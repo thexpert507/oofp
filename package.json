@@ -4,10 +4,10 @@
 	"description": "OOFP - Object-Oriented Functional Programming ecosystem for TypeScript",
 	"packageManager": "pnpm@10.6.2",
 	"scripts": {
-		"build": "pnpm -r --filter './packages/*' run build",
-		"test": "pnpm -r --filter './packages/*' run test",
+		"build": "pnpm -r --filter './packages/*' --filter './examples/*' run build",
+		"test": "pnpm -r --filter './packages/*' --filter './examples/*' run test",
 		"test:watch": "pnpm -r --filter './packages/*' run test:watch",
-		"type-check": "pnpm -r --filter './packages/*' run type-check",
+		"type-check": "pnpm -r --filter './packages/*' --filter './examples/*' run type-check",
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"bench": "pnpm -r --filter './packages/*' run bench",
@@ -18,14 +18,11 @@
 		"docs:dev": "pnpm --filter @oofp/docs run dev",
 		"docs:build": "pnpm --filter @oofp/docs run build",
 		"docs:preview": "pnpm --filter @oofp/docs run preview",
+		"example:nest": "pnpm --filter @oofp/example-nest-backend start",
 		"crosspost:devto": "node scripts/crosspost-devto.mjs"
 	},
 	"pnpm": {
-		"onlyBuiltDependencies": [
-			"@biomejs/biome",
-			"esbuild",
-			"sharp"
-		]
+		"onlyBuiltDependencies": ["@biomejs/biome", "esbuild", "sharp"]
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",

@@ -1,0 +1,29 @@
+{
+	"name": "@oofp/example-nest-backend",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"build": "esbuild src/main.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/main.cjs",
+		"dev": "pnpm start",
+		"start": "pnpm build && node dist/main.cjs",
+		"test": "vitest run",
+		"type-check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@nestjs/common": "^11.1.24",
+		"@nestjs/core": "^11.1.24",
+		"@nestjs/platform-express": "^11.1.24",
+		"@oofp/core": "workspace:*",
+		"reflect-metadata": "^0.2.2",
+		"rxjs": "^7.8.2"
+	},
+	"devDependencies": {
+		"@nestjs/testing": "^11.1.24",
+		"@types/node": "^24.10.1",
+		"@types/supertest": "^6.0.3",
+		"esbuild": "^0.27.3",
+		"supertest": "^7.1.4",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.5"
+	}
+}

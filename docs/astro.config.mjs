@@ -159,6 +159,10 @@ export default defineConfig({
               label: "Dependency Injection",
               slug: "guides/dependency-injection",
             },
+            {
+              label: "Opinionated Backend Architecture",
+              slug: "guides/opinionated-backend-architecture",
+            },
             { label: "Type Conversions", slug: "guides/type-conversions" },
           ],
         },

@@ -5,6 +5,8 @@ description: "Real-world patterns for building applications with OOFP."
 
 This page covers six patterns that appear repeatedly in production applications built with OOFP. Each pattern addresses a specific architectural need — from creating services to bridging with React Query.
 
+For a cohesive, runnable backend example rather than isolated patterns, start with [Opinionated Backend Architecture](/guides/opinionated-backend-architecture/).
+
 ---
 
 ## 1. Service Factory with Reader

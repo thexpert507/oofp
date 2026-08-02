@@ -5,6 +5,8 @@ description: "Functional error handling patterns with Either and TaskEither."
 
 Functional error handling replaces `try-catch` with typed values. Errors become first-class data — visible in the type system, composable with pipelines, and impossible to forget.
 
+For an end-to-end example that maps typed application errors to conventional HTTP responses, see [Opinionated Backend Architecture](/guides/opinionated-backend-architecture/).
+
 ```typescript
 import { pipe } from "@oofp/core/pipe";
 import * as E from "@oofp/core/either";

@@ -24,12 +24,7 @@
 			"./tsconfig.json",
 			"./vite.config.ts"
 		],
-		"ignore": [
-			"node_modules",
-			"**/node_modules/**",
-			"dist",
-			"bin"
-		],
+		"ignore": ["node_modules", "**/node_modules/**", "dist", "bin"],
 		"ignoreUnknown": true
 	},
 	"formatter": {
@@ -116,24 +111,19 @@
 				"useValidTypeof": "error"
 			}
 		},
-		"ignore": [
-			"**/dist",
-			"**/.eslintrc.cjs"
-		]
+		"ignore": ["**/dist", "**/.eslintrc.cjs"]
 	},
 	"javascript": {
+		"parser": {
+			"unsafeParameterDecoratorsEnabled": true
+		},
 		"formatter": {
 			"quoteStyle": "double"
 		}
 	},
 	"overrides": [
 		{
-			"include": [
-				"*.ts",
-				"*.tsx",
-				"*.mts",
-				"*.cts"
-			],
+			"include": ["*.ts", "*.tsx", "*.mts", "*.cts"],
 			"linter": {
 				"rules": {
 					"correctness": {

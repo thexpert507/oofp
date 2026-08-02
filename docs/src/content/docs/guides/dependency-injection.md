@@ -5,6 +5,8 @@ description: "Pure dependency injection with Reader and ReaderTaskEither."
 
 OOFP provides dependency injection through the `Reader` and `ReaderTaskEither` types — no decorators, no containers, no runtime reflection. Dependencies are declared in the type signature and provided at the application boundary.
 
+For a complete NestJS vertical slice using these ideas, see [Opinionated Backend Architecture](/guides/opinionated-backend-architecture/).
+
 ```typescript
 import { pipe } from "@oofp/core/pipe";
 import * as R from "@oofp/core/reader";
