@@ -47,6 +47,16 @@ describe("POST /users", () => {
 		expect(response.body).toMatchObject({ field: "name" });
 	});
 
+	it("returns 400 for unexpected input fields", async () => {
+		const app = await createApp();
+		const response = await request(app.getHttpServer())
+			.post("/users")
+			.send({ name: "Ada Lovelace", email: "ada@example.com", role: "admin" })
+			.expect(400);
+
+		expect(response.body).toMatchObject({ field: "body" });
+	});
+
 	it("returns 409 when the email is already registered", async () => {
 		const app = await createApp();
 		const body = { name: "Ada Lovelace", email: "ada@example.com" };

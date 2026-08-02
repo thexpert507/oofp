@@ -2,6 +2,7 @@ import type * as M from "@oofp/core/maybe";
 import type * as TE from "@oofp/core/task-either";
 import type {
 	Email,
+	EmailAlreadyRegisteredError,
 	NotificationError,
 	User,
 	UserId,
@@ -10,7 +11,7 @@ import type {
 
 export type UserRepository = {
 	findByEmail: (email: Email) => TE.TaskEither<UserRepositoryError, M.Maybe<User>>;
-	save: (user: User) => TE.TaskEither<UserRepositoryError, User>;
+	save: (user: User) => TE.TaskEither<UserRepositoryError | EmailAlreadyRegisteredError, User>;
 };
 
 export type WelcomeNotifier = {

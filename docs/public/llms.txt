@@ -29,6 +29,7 @@ The official documentation is https://oofp.js.org and the source repository is h
 - [TaskEither](https://oofp.js.org/core/task-either/): Typed asynchronous operations that may fail.
 - [ReaderTaskEither](https://oofp.js.org/core/reader-task-either/): Dependency injection with typed asynchronous errors.
 - [Error handling](https://oofp.js.org/guides/error-handling/): Practical Either and TaskEither patterns.
+- [Functional clean architecture](https://oofp.js.org/guides/functional-clean-architecture/): End-to-end architecture with referential transparency, composition, Zod validation, and repository adapters.
 - [Opinionated backend architecture](https://oofp.js.org/guides/opinionated-backend-architecture/): A runnable NestJS vertical slice with a functional application core.
 - [Production patterns](https://oofp.js.org/advanced/production-patterns/): Application-level integration patterns.
 

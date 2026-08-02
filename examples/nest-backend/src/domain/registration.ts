@@ -39,29 +39,29 @@ const parseName = (value: unknown): E.Either<ValidationError, string> => {
 };
 
 const parseEmail = (value: unknown): E.Either<ValidationError, Email> => {
-	if (typeof value !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+	if (typeof value !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
 		return E.left(ValidationError.of("email", "Email must be valid"));
 	}
 	return E.right(value.trim().toLowerCase() as Email);
 };
 
-const parseRegisterUserDto = (input: unknown): E.Either<ValidationError, RegisterUserDto> => {
-	if (typeof input !== "object" || input === null) {
-		return E.left(ValidationError.of("body", "Request body must be an object"));
-	}
-	const body = input as Record<string, unknown>;
-	return pipe(
-		parseName(body.name),
+const parseRegisterUserDto = (input: {
+	readonly name: string;
+	readonly email: string;
+}): E.Either<ValidationError, RegisterUserDto> =>
+	pipe(
+		parseName(input.name),
 		E.chain((name) =>
 			pipe(
-				parseEmail(body.email),
+				parseEmail(input.email),
 				E.map((email) => ({ name, email })),
 			),
 		),
 	);
-};
 
 export const RegisterUserDto = { parse: parseRegisterUserDto };
+
+export const Email = { parse: parseEmail };
 
 export type EmailAlreadyRegisteredError = DomainError<"EmailAlreadyRegisteredError"> & {
 	readonly email: Email;

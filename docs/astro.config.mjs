@@ -160,6 +160,10 @@ export default defineConfig({
               slug: "guides/dependency-injection",
             },
             {
+              label: "Functional Clean Architecture",
+              slug: "guides/functional-clean-architecture",
+            },
+            {
               label: "Opinionated Backend Architecture",
               slug: "guides/opinionated-backend-architecture",
             },

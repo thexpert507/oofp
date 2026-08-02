@@ -7,6 +7,8 @@ OOFP does not require a purely functional runtime or framework. A productive bac
 
 This guide follows the runnable [`examples/nest-backend`](https://github.com/thexpert507/oofp/tree/main/examples/nest-backend) project. It implements one vertical slice: registering a user, rejecting duplicate emails, persisting the account, and attempting a welcome notification.
 
+For the principles behind this split—especially referential transparency, composition, Zod boundaries, and repository implementation—start with [Functional Clean Architecture](/guides/functional-clean-architecture/).
+
 ## The boundary/core split
 
 The governing rule is simple:
@@ -29,26 +31,18 @@ TaskEither repository           function: infrastructure failure → typed value
 
 The controller is allowed to know NestJS. The domain, use-case, repository contract, and service factory are not.
 
-## 1. Parse untrusted values with Either
+## 1. Parse untrusted values with Zod and Either
 
-Do not let an HTTP body become a domain value merely because TypeScript assigned it a type. Parse `unknown` at the boundary and return a typed error.
+Do not let an HTTP body become a domain value merely because TypeScript assigned it a type. Zod validates the transport shape; `Either` carries the result into the application pipeline.
 
 ```typescript
-export const RegisterUserDto = {
-  parse: (input: unknown): E.Either<ValidationError, RegisterUserDto> =>
-    pipe(
-      parseName(input.name),
-      E.chain((name) =>
-        pipe(
-          parseEmail(input.email),
-          E.map((email) => ({ name, email })),
-        ),
-      ),
-    ),
-}
+export const registerUserRequestSchema = z.strictObject({
+  name: z.string().trim().min(2, "Name must contain at least two characters"),
+  email: z.string().trim().toLowerCase().email("Email must be valid"),
+})
 ```
 
-The complete parser also checks that the input is an object before accessing its fields. `ValidationError` is a discriminated domain value, not a thrown exception. See the [complete domain module](https://github.com/thexpert507/oofp/blob/main/examples/nest-backend/src/domain/registration.ts).
+`safeParse` is converted to `Either<ValidationError, RegisterUserDto>`, then the domain parser independently rechecks its invariants. Zod stays in presentation rather than becoming a domain dependency. See the [complete request parser](https://github.com/thexpert507/oofp/blob/main/examples/nest-backend/src/presentation/register-user.request.ts) and [domain module](https://github.com/thexpert507/oofp/blob/main/examples/nest-backend/src/domain/registration.ts).
 
 ## 2. Make dependencies visible in the RTE context
 
@@ -115,7 +109,27 @@ Recovery is an explicit product decision. Do not add `orElse` merely to make a p
 
 This example waits for the notification attempt and absorbs its typed failure. Detached effects require stronger operational guarantees—usually a durable queue—and are deliberately outside this example.
 
-## 5. Turn a Reader into a Nest provider
+## 5. Implement the repository at the infrastructure boundary
+
+The application contract returns `TaskEither`; the database driver probably returns a rejecting `Promise`. The adapter must close that gap rather than letting driver behavior leak inward.
+
+```typescript
+findByEmail: (email) =>
+  pipe(
+    TE.tryCatch(UserRepositoryError.from)(() => client.findUserByEmail(email)),
+    TE.chain((row) =>
+      row === null
+        ? TE.right(M.nothing<User>())
+        : pipe(TE.fromEither(decodeUser(row)), TE.map(M.just)),
+    ),
+  )
+```
+
+The [database-shaped adapter](https://github.com/thexpert507/oofp/blob/main/examples/nest-backend/src/infrastructure/database-user.repository.ts) also decodes stored rows and translates a driver's unique-email violation to `EmailAlreadyRegisteredError`. This matters because the earlier availability check can race with another request; the storage constraint is authoritative.
+
+The app uses the [in-memory implementation](https://github.com/thexpert507/oofp/blob/main/examples/nest-backend/src/infrastructure/in-memory-user.repository.ts) by default so it runs without external services. Both implementations satisfy the same functional application contract.
+
+## 6. Turn a Reader into a Nest provider
 
 The application service is a Reader factory. Once dependencies are supplied, Nest receives an ordinary service record.
 
@@ -142,7 +156,7 @@ const provideUserService = provideReader({
 
 This adapter is intentionally local. It is short, transparent, and can evolve with the application's dependency conventions without expanding OOFP's public API.
 
-## 6. Execute effects at the HTTP boundary
+## 7. Execute effects at the HTTP boundary
 
 The controller performs only boundary work: parse, delegate, map the result, translate errors, execute.
 
@@ -151,7 +165,7 @@ The controller performs only boundary work: parse, delegate, map the result, tra
 @HttpCode(HttpStatus.CREATED)
 register(@Body() body: unknown) {
   return pipe(
-    RegisterUserDto.parse(body),
+    parseRegisterUserRequest(body),
     TE.fromEither,
     TE.chainw(this.users.register),
     TE.map(toPublicUser),
@@ -171,7 +185,7 @@ register(@Body() body: unknown) {
 
 The API does not expose OOFP's `{ tag, value }` representation. Serializing `Either` can be a deliberate private protocol, but it should not happen accidentally or replace meaningful HTTP status codes by default.
 
-## 7. Test by providing capabilities
+## 8. Test by providing capabilities
 
 Use-case tests do not need a Nest testing module. Supply records that implement the required capabilities and run the RTE:
 
@@ -190,10 +204,13 @@ The example covers success, duplicate email, repository failure, recoverable not
 - Keep domain and application code class-free unless a library genuinely requires a class.
 - Represent expected failure with `Either`, `TaskEither`, or `ReaderTaskEither`; never throw for business branching.
 - Capture rejecting promises at infrastructure boundaries with `TE.tryCatch`, `TE.fromTask`, or an equivalent adapter, then map the error immediately.
+- Validate transport input with Zod, but keep domain invariants independent from the HTTP schema.
+- Decode database rows and translate driver errors inside repository adapters.
+- Treat unique storage constraints—not a preliminary lookup—as authoritative under concurrency.
 - Keep dependencies narrow and explicit in the RTE context.
 - Keep the main pipeline readable as a sequence of named business steps.
 - Distinguish fatal effects from best-effort effects explicitly.
 - Run effects once, at the framework boundary.
 - Prefer small application-local adapters over premature framework packages.
 
-Next, read [Dependency Injection](/guides/dependency-injection/) for the Reader APIs and [Error Handling](/guides/error-handling/) for recovery and error transformation patterns.
+Next, read [Functional Clean Architecture](/guides/functional-clean-architecture/) for the underlying principles, [Dependency Injection](/guides/dependency-injection/) for the Reader APIs, and [Error Handling](/guides/error-handling/) for recovery patterns.

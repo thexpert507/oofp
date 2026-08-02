@@ -8,12 +8,14 @@ import type { RegistrationContext } from "../src/application/contracts";
 import { registerUser } from "../src/application/register-user";
 import {
 	type Email,
+	EmailAlreadyRegisteredError,
 	NotificationError,
 	RegisterUserDto,
 	type User,
 	type UserId,
 	UserRepositoryError,
 } from "../src/domain/registration";
+import { parseRegisterUserRequest } from "../src/presentation/register-user.request";
 
 const dto = { name: "Ada Lovelace", email: "ada@example.com" as Email };
 const storedUser: User = { id: "user-1" as UserId, ...dto };
@@ -31,9 +33,9 @@ const createContext = (overrides: Partial<RegistrationContext> = {}): Registrati
 
 const run = (context: RegistrationContext) => pipe(registerUser(dto), RTE.run(context), TE.run);
 
-describe("RegisterUserDto", () => {
+describe("parseRegisterUserRequest", () => {
 	it("normalizes a valid registration request", () => {
-		const result = RegisterUserDto.parse({ name: "  Ada Lovelace  ", email: "ADA@EXAMPLE.COM" });
+		const result = parseRegisterUserRequest({ name: "  Ada Lovelace  ", email: "ADA@EXAMPLE.COM" });
 		expect(result).toEqual(E.right({ name: "Ada Lovelace", email: "ada@example.com" }));
 	});
 
@@ -41,10 +43,22 @@ describe("RegisterUserDto", () => {
 		[null, "body"],
 		[{ name: "A", email: "ada@example.com" }, "name"],
 		[{ name: "Ada", email: "not-an-email" }, "email"],
+		[{ name: "Ada", email: "ada@example.com", role: "admin" }, "body"],
 	])("returns a typed validation error for %j", (input, field) => {
-		const result = RegisterUserDto.parse(input);
+		const result = parseRegisterUserRequest(input);
 		expect(E.isLeft(result)).toBe(true);
 		if (E.isLeft(result)) expect(result.value.field).toBe(field);
+	});
+});
+
+describe("RegisterUserDto", () => {
+	it("protects domain invariants without the HTTP schema", () => {
+		expect(RegisterUserDto.parse({ name: "A", email: "ada@example.com" })).toEqual(
+			E.left(expect.objectContaining({ _tag: "ValidationError", field: "name" })),
+		);
+		expect(RegisterUserDto.parse({ name: "Ada", email: "invalid" })).toEqual(
+			E.left(expect.objectContaining({ _tag: "ValidationError", field: "email" })),
+		);
 	});
 });
 
@@ -85,6 +99,22 @@ describe("registerUser", () => {
 
 		expect(result).toEqual(E.left(error));
 		expect(context.userRepository.save).not.toHaveBeenCalled();
+	});
+
+	it("keeps an atomic duplicate from save in the error channel", async () => {
+		const duplicate = EmailAlreadyRegisteredError.of(dto.email);
+		const context = createContext({
+			userRepository: {
+				findByEmail: vi.fn(() =>
+					TE.right<UserRepositoryError, M.Maybe<User>>(M.nothing()),
+				),
+				save: vi.fn(() => TE.left<typeof duplicate, User>(duplicate)),
+			},
+		});
+		const result = await run(context);
+
+		expect(result).toEqual(E.left(duplicate));
+		expect(context.welcomeNotifier.send).not.toHaveBeenCalled();
 	});
 
 	it("logs and absorbs notification failures", async () => {
