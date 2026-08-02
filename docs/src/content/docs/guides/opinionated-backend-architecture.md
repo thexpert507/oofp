@@ -213,4 +213,4 @@ The example covers success, duplicate email, repository failure, recoverable not
 - Run effects once, at the framework boundary.
 - Prefer small application-local adapters over premature framework packages.
 
-Next, read [Functional Clean Architecture](/guides/functional-clean-architecture/) for the underlying principles, [Dependency Injection](/guides/dependency-injection/) for the Reader APIs, and [Error Handling](/guides/error-handling/) for recovery patterns.
+Next, read [Referential Transparency in TypeScript](/blog/referential-transparency-humans-ai/) for the human and AI development argument, [Functional Clean Architecture](/guides/functional-clean-architecture/) for the underlying principles, and [Dependency Injection](/guides/dependency-injection/) for the Reader APIs.

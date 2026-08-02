@@ -296,4 +296,4 @@ No application test needs decorator metadata, a DI test module, or a real databa
 - Enforce uniqueness in storage and handle the race during `save`.
 - Compose named business steps and run the final program once at the edge.
 
-Continue with [Opinionated Backend Architecture](/guides/opinionated-backend-architecture/) for the NestJS integration recipe, [Dependency Injection](/guides/dependency-injection/) for Reader patterns, and [Error Handling](/guides/error-handling/) for typed recovery.
+For the deeper argument about why these properties improve software for both people and coding agents, read [Referential Transparency in TypeScript](/blog/referential-transparency-humans-ai/). Continue with [Opinionated Backend Architecture](/guides/opinionated-backend-architecture/) for the NestJS integration recipe, [Dependency Injection](/guides/dependency-injection/) for Reader patterns, and [Error Handling](/guides/error-handling/) for typed recovery.
