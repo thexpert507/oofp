@@ -675,6 +675,24 @@ header,
    12. Starlight Theme Black Blog Sidebar Fix (CRITICAL TARGETING)
    ------------------------------------------------------------------ */
 
+/* Blog covers: keep the explanatory artwork crisp in cards and posts. */
+.preview figure,
+.sl-markdown-content > figure:first-child {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--sl-color-accent) 24%, var(--border));
+  border-radius: 0.9rem;
+  background: #05060a;
+  box-shadow: 0 18px 50px rgb(0 0 0 / 24%);
+}
+
+.preview figure img,
+.sl-markdown-content > figure:first-child img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
 .container-sidebar {
   display: flex !important;
   flex-direction: column !important;

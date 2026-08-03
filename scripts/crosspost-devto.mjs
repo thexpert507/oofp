@@ -118,6 +118,7 @@ async function publishOrUpdateArticle(file, existingArticleMap) {
       canonical_url: canonicalUrl,
       description,
       tags,
+      main_image: `https://oofp.js.org/blog-covers/${slug}.webp`,
     },
   };
 

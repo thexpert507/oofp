@@ -8,6 +8,9 @@ tags:
   - functional-programming
   - monads
 excerpt: "Monads in TypeScript are simpler than you think. You already use them — Promise and Array are monads. Learn the pattern, then apply it with Maybe, Either, Task, and TaskEither from @oofp/core."
+cover:
+  alt: "A practical monad diagram showing of wrapping a value, map transforming it, and chain flattening a nested container."
+  image: ../../../assets/blog/understanding-monads-typescript-practical-guide.webp
 ---
 
 You have read five blog posts about monads. Each one started with category theory, mentioned burritos, and left you more confused than before. Let's skip all of that.

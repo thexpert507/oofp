@@ -8,6 +8,9 @@ tags:
   - functional-programming
   - composition
 excerpt: "Stop writing unreadable nested function calls. Learn how pipe, flow, and compose give you clean, type-safe function composition in TypeScript today."
+cover:
+  alt: "Pipe versus nesting: a deeply nested function call is transformed into a readable left-to-right TypeScript pipeline."
+  image: ../../../assets/blog/typescript-pipe-compose-function-composition.webp
 ---
 
 Look at this code and tell me the order of operations:

@@ -8,6 +8,9 @@ tags:
   - functional-programming
   - dependency-injection
 excerpt: "Stop fighting IoC containers. The Reader pattern gives you compile-time dependency injection in TypeScript using plain functions and types — no decorators, no reflect-metadata, no runtime overhead."
+cover:
+  alt: "Dependency injection without classes: database, logger, and config flow directly into a Reader program while the container is crossed out."
+  image: ../../../assets/blog/dependency-injection-typescript-reader-pattern.webp
 ---
 
 You want dependency injection in TypeScript. So you reach for InversifyJS, tsyringe, or NestJS. You add `reflect-metadata` to your entry point. You slap `@Injectable()` on every class. You register bindings in a container. You configure modules. You emit decorator metadata. You lose tree-shaking. And after all that setup, the compiler still cannot tell you if you forgot to register a dependency — you find out at runtime.

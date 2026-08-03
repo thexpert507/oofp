@@ -8,6 +8,9 @@ tags:
   - functional-programming
   - error-handling
 excerpt: "Learn how to handle errors in TypeScript using Either and TaskEither monads instead of try-catch blocks. Type-safe, composable, and production-ready patterns."
+cover:
+  alt: "Errors as values: an invisible throw is contrasted with a typed Either containing Left and Right paths."
+  image: ../../../assets/blog/functional-error-handling-typescript.webp
 ---
 
 Every TypeScript developer has written something like this:

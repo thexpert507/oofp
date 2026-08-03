@@ -8,6 +8,9 @@ tags:
   - functional-programming
   - architecture
 excerpt: "Referential transparency is not academic decoration. It reduces the amount of hidden context humans and AI agents need to understand, test, and safely change a TypeScript system."
+cover:
+  alt: "Referential transparency diagram showing identical inputs passing through the same function and producing identical outputs without hidden state."
+  image: ../../../assets/blog/referential-transparency-humans-ai.webp
 ---
 
 The most valuable property of functional programming is not immutability, monads, or writing everything as an arrow function.

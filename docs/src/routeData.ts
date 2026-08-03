@@ -24,6 +24,10 @@ export const onRequest = defineRouteMiddleware((context) => {
 	const data = route.entry.data as EntryData;
 	const path = `/${route.id.replace(/\/$/, "")}/`;
 	const pageUrl = new URL(path, siteUrl).href;
+	const isBlogPost = route.id.startsWith("blog/");
+	const socialImage = isBlogPost
+		? new URL(`/blog-covers/${route.id.split("/").at(-1)}.webp`, siteUrl).href
+		: new URL("/og-image.png", siteUrl).href;
 	const datePublished = data.date ? new Date(data.date).toISOString() : undefined;
 	const dateModified = route.lastUpdated?.toISOString();
 
@@ -34,6 +38,7 @@ export const onRequest = defineRouteMiddleware((context) => {
 		description: data.description ?? data.excerpt,
 		url: pageUrl,
 		mainEntityOfPage: pageUrl,
+		image: socialImage,
 		inLanguage: "en",
 		author: {
 			"@type": "Person",
@@ -51,6 +56,18 @@ export const onRequest = defineRouteMiddleware((context) => {
 		...(datePublished ? { datePublished } : {}),
 		...(dateModified ? { dateModified } : {}),
 	};
+
+	for (const [attribute, name] of [
+		["property", "og:image"],
+		["name", "twitter:image"],
+	] as const) {
+		const existing = route.head.find((entry) => entry.tag === "meta" && entry.attrs?.[attribute] === name);
+		if (existing?.attrs) {
+			existing.attrs.content = socialImage;
+		} else {
+			route.head.push({ tag: "meta", attrs: { [attribute]: name, content: socialImage } });
+		}
+	}
 
 	route.head.push({
 		tag: "script",
