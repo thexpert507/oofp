@@ -36,6 +36,7 @@ The official documentation is https://oofp.js.org and the source repository is h
 ## Essays
 
 - [Referential Transparency in TypeScript](https://oofp.js.org/blog/referential-transparency-humans-ai/): Why explicit inputs, lazy effects, and composition make software easier for humans and AI agents to reason about.
+- [Harness Engineering through Functional Programming](https://oofp.js.org/blog/harness-engineering-functional-programming/): How typed tools, explicit effects, controlled execution, and verification provide a functional foundation inside coding-agent harnesses.
 
 ## Source-of-truth policy
 
