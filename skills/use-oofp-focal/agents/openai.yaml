@@ -1,0 +1,4 @@
+interface:
+  display_name: "Use OOFP Focal"
+  short_description: "Update nested data with composable optics"
+  default_prompt: "Use $use-oofp-focal to implement this immutable nested update with the right optic."

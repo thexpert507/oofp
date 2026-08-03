@@ -1,0 +1,4 @@
+interface:
+  display_name: "Use OOFP Core"
+  short_description: "Compose typed functional TypeScript workflows"
+  default_prompt: "Use $use-oofp-core to model this TypeScript workflow with the appropriate OOFP effects."

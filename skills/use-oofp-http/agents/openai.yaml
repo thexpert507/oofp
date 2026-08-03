@@ -1,0 +1,4 @@
+interface:
+  display_name: "Use OOFP HTTP"
+  short_description: "Build typed functional HTTP clients"
+  default_prompt: "Use $use-oofp-http to implement this HTTP client with typed errors and context."

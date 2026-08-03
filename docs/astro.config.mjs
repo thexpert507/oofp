@@ -167,6 +167,7 @@ export default defineConfig({
               label: "Opinionated Backend Architecture",
               slug: "guides/opinionated-backend-architecture",
             },
+            { label: "AI Agent Skills", slug: "guides/ai-agent-skills" },
             { label: "Type Conversions", slug: "guides/type-conversions" },
           ],
         },

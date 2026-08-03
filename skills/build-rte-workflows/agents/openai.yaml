@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build RTE Workflows"
+  short_description: "Design typed dependency-injected workflows"
+  default_prompt: "Use $build-rte-workflows to implement this dependency-injected TypeScript use case."
