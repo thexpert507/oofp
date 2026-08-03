@@ -3,33 +3,28 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import { pipe } from "@/pipe";
-import * as L from "@/list";
-import { URIS2, Kind2 } from "@/URIS2";
-import { Monad2 } from "@/monad";
+import { Kind2, URIS2 } from "@/URIS2";
 import { Applicative2 } from "@/applicative";
+import * as L from "@/list";
+import { Monad2 } from "@/monad";
+import { pipe } from "@/pipe";
+import type { EnsureKinds2 } from "./hkt-inference";
 
 // Definimos el tipo de la instancia de la mónada, que tiene tanto `Monad` como `Applicative`.
 type Instance<F extends URIS2> = Monad2<F> & Applicative2<F>;
 
-// Tipo para argumentos (permite inferencia de tipos)
-type ArgsType<F extends URIS2> =
-	| [Kind2<F, unknown, unknown>, ...Kind2<F, unknown, unknown>[]]
-	| Kind2<F, unknown, unknown>[];
-
 // Tipo para los valores que contiene cada mónada, como un array de `Kind<F, A>`
-type VOK<F extends URIS2, Args> = {
-	[K in keyof Args]: Args[K] extends Kind2<F, unknown, infer A> ? A : never;
+type VOK<F extends URIS2, Args extends unknown[]> = {
+	[K in keyof Args]: Args[K] extends Kind2<F, infer _E, infer A> ? A : never;
 };
 
 // Extrae y une todos los tipos de error E1 | E2 | E3 | ...
-type UnionE<F extends URIS2, Args> = Args extends readonly unknown[]
-	? Args[number] extends Kind2<F, infer E, unknown>
-		? E
-		: never
-	: never;
+type Errors<F extends URIS2, Args extends unknown[]> = {
+	[K in keyof Args]: Args[K] extends Kind2<F, infer E, infer _A> ? E : never;
+};
+type UnionE<F extends URIS2, Args extends unknown[]> = Errors<F, Args>[number];
 
-type Result<F extends URIS2, E, Args> = Kind2<F, E, VOK<F, Args>>;
+type Result<F extends URIS2, E, Args extends unknown[]> = Kind2<F, E, VOK<F, Args>>;
 
 /**
  * Secuencia un array/tupla de mónadas Kind2.
@@ -61,7 +56,10 @@ type Result<F extends URIS2, E, Args> = Kind2<F, E, VOK<F, Args>>;
  */
 export const sequenceT2 =
 	<F extends URIS2>(mo: Instance<F>) =>
-	<Args extends ArgsType<F>>(args: Args): Result<F, UnionE<F, Args>, Args> => {
+	<const Args extends unknown[]>(
+		args: Args,
+		..._validation: Args extends EnsureKinds2<F, Args> ? [] : [invalid: never]
+	): Result<F, UnionE<F, Args>, Args> => {
 		type E = UnionE<F, Args>;
 		type Values = VOK<F, Args>;
 
@@ -73,11 +71,16 @@ export const sequenceT2 =
 				[...values, result] as Values;
 
 		return pipe(
-			args as Kind2<F, E, unknown>[],
+			args as unknown as Kind2<F, E, unknown>[],
 			L.reduce(initial, (acc, curr) => {
 				return pipe(
 					acc,
-					mo.chain((values) => pipe(curr, mo.map((result) => merge(result)(values)))),
+					mo.chain((values) =>
+						pipe(
+							curr,
+							mo.map((result) => merge(result)(values)),
+						),
+					),
 				) as Kind2<F, E, Values>;
 			}),
 		) as Result<F, E, Args>;

@@ -3,38 +3,42 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import { pipe } from "@/pipe";
 import { Kind2, URIS2 } from "@/URIS2";
-import * as L from "@/list";
-import { Monad2 } from "@/monad";
 import { Applicative2 } from "@/applicative";
 import { Delayable2 } from "@/delayable";
 import { id } from "@/id";
+import * as L from "@/list";
+import { Monad2 } from "@/monad";
+import { pipe } from "@/pipe";
+import type { EnsureKind2Record, Kind2Parts } from "./hkt-inference";
 import type { Simplify } from "./simplify";
 
 // Tipo de la instancia de la mónada
 type Instance<F extends URIS2> = Monad2<F> & Applicative2<F> & Delayable2<F>;
 
 // Extrae la unión de todos los tipos de error del objeto
-type UnionE<F extends URIS2, Args> = Args extends Record<string, Kind2<F, unknown, unknown>>
-	? Args[keyof Args] extends Kind2<F, infer E, unknown>
-		? E
-		: never
-	: never;
+type UnionE<F extends URIS2, Args extends Record<string, unknown>> = Kind2Parts<
+	F,
+	Args[keyof Args]
+>[0];
 
 // Mapea cada propiedad del objeto extrayendo el tipo de valor A
-type InferA<F extends URIS2, Args> = {
-	[K in keyof Args]: Args[K] extends Kind2<F, unknown, infer A> ? A : never;
+type InferA<F extends URIS2, Args extends Record<string, unknown>> = {
+	[K in keyof Args]: Kind2Parts<F, Args[K]>[1];
 };
 
 // Resultado con el tipo completamente expandido
-type Result<F extends URIS2, E, Args> = Kind2<F, E, Simplify<InferA<F, Args>>>;
+type Result<F extends URIS2, E, Args extends Record<string, unknown>> = Kind2<
+	F,
+	E,
+	Simplify<InferA<F, Args>>
+>;
 
 type Config = { concurrency?: number; delay?: number };
 
 const reduceFn =
 	<F extends URIS2>(mo: Instance<F>) =>
-	<E, Args extends Record<string, Kind2<F, unknown, unknown>>>(
+	<E, Args extends Record<string, unknown>>(
 		acc: Kind2<F, E, Simplify<InferA<F, Args>>>,
 		[key, curr]: [string, Kind2<F, E, unknown>],
 	) => {
@@ -72,8 +76,8 @@ const reduceFn =
 export const concurrencyObject2 =
 	<F extends URIS2>(mo: Instance<F>) =>
 	(config?: Config) =>
-	<Args extends Record<string, Kind2<F, unknown, unknown>>>(
-		args: Args,
+	<Args extends Record<string, unknown>>(
+		args: Args & EnsureKind2Record<F, NoInfer<Args>>,
 	): Result<F, UnionE<F, Args>, Args> => {
 		type E = UnionE<F, Args>;
 

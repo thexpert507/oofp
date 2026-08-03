@@ -3,13 +3,19 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import { describe, it, expect } from "vitest";
-import * as T from "@/task";
-import * as TE from "@/task-either";
 import * as E from "@/either";
 import * as RTE from "@/reader-task-either";
-import { sequenceT, sequenceT2, sequenceT3, sequenceObjectT, sequenceObjectT2, sequenceObjectT3 } from "@/utils";
-import { pipe } from "@/pipe";
+import * as T from "@/task";
+import * as TE from "@/task-either";
+import {
+	sequenceObjectT,
+	sequenceObjectT2,
+	sequenceObjectT3,
+	sequenceT,
+	sequenceT2,
+	sequenceT3,
+} from "@/utils";
+import { describe, expect, it } from "vitest";
 
 /**
  * Regression tests for sequence execution ordering.
@@ -30,25 +36,38 @@ import { pipe } from "@/pipe";
  */
 
 // Helper: creates a Task that records its label into the log array after a delay
-const makeTrackedTask = (label: number, delayMs: number, log: number[]): T.Task<number> =>
-	() => new Promise((resolve) => setTimeout(() => {
-		log.push(label);
-		resolve(label);
-	}, delayMs));
+const makeTrackedTask =
+	(label: number, delayMs: number, log: number[]): T.Task<number> =>
+	() =>
+		new Promise((resolve) =>
+			setTimeout(() => {
+				log.push(label);
+				resolve(label);
+			}, delayMs),
+		);
 
 // Helper: creates a TaskEither that records its label into the log array after a delay
-const makeTrackedTaskEither = (label: number, delayMs: number, log: number[]): TE.TaskEither<string, number> =>
-	() => new Promise((resolve) => setTimeout(() => {
-		log.push(label);
-		resolve(E.right(label));
-	}, delayMs));
+const makeTrackedTaskEither =
+	(label: number, delayMs: number, log: number[]): TE.TaskEither<string, number> =>
+	() =>
+		new Promise((resolve) =>
+			setTimeout(() => {
+				log.push(label);
+				resolve(E.right(label));
+			}, delayMs),
+		);
 
 // Helper: creates a ReaderTaskEither that records its label into the log array after a delay
-const makeTrackedRTE = (label: number, delayMs: number, log: number[]): RTE.ReaderTaskEither<unknown, string, number> =>
-	(_ctx: unknown) => () => new Promise((resolve) => setTimeout(() => {
-		log.push(label);
-		resolve(E.right(label));
-	}, delayMs));
+const makeTrackedRTE =
+	(label: number, delayMs: number, log: number[]): RTE.ReaderTaskEither<unknown, string, number> =>
+	(_ctx: unknown) =>
+	() =>
+		new Promise((resolve) =>
+			setTimeout(() => {
+				log.push(label);
+				resolve(E.right(label));
+			}, delayMs),
+		);
 
 describe("Sequence execution ordering (regression)", () => {
 	describe("sequenceT (array)", () => {
@@ -89,8 +108,7 @@ describe("Sequence execution ordering (regression)", () => {
 			const t2 = makeTrackedRTE(2, 30, log);
 			const t3 = makeTrackedRTE(3, 10, log);
 
-			// biome-ignore lint/suspicious/noExplicitAny: mixed context types require cast
-			const result = sequenceT3(RTE.RTE)([t1, t2, t3] as any);
+			const result = sequenceT3(RTE.RTE)([t1, t2, t3]);
 			const either = await RTE.run({})(result)();
 
 			expect(either).toEqual(E.right([1, 2, 3]));
@@ -102,11 +120,15 @@ describe("Sequence execution ordering (regression)", () => {
 		it("should execute Task operations sequentially, not in parallel", async () => {
 			const log: string[] = [];
 
-			const makeTask = (label: string, delayMs: number): T.Task<string> =>
-				() => new Promise((resolve) => setTimeout(() => {
-					log.push(label);
-					resolve(label);
-				}, delayMs));
+			const makeTask =
+				(label: string, delayMs: number): T.Task<string> =>
+				() =>
+					new Promise((resolve) =>
+						setTimeout(() => {
+							log.push(label);
+							resolve(label);
+						}, delayMs),
+					);
 
 			// Object.entries iteration order matches insertion order for string keys
 			const tasks = {
@@ -125,11 +147,15 @@ describe("Sequence execution ordering (regression)", () => {
 		it("should execute TaskEither operations sequentially, not in parallel", async () => {
 			const log: string[] = [];
 
-			const makeTE = (label: string, delayMs: number): TE.TaskEither<string, string> =>
-				() => new Promise((resolve) => setTimeout(() => {
-					log.push(label);
-					resolve(E.right(label));
-				}, delayMs));
+			const makeTE =
+				(label: string, delayMs: number): TE.TaskEither<string, string> =>
+				() =>
+					new Promise((resolve) =>
+						setTimeout(() => {
+							log.push(label);
+							resolve(E.right(label));
+						}, delayMs),
+					);
 
 			const tasks = {
 				a: makeTE("a", 50),
@@ -147,11 +173,16 @@ describe("Sequence execution ordering (regression)", () => {
 		it("should execute ReaderTaskEither operations sequentially, not in parallel", async () => {
 			const log: string[] = [];
 
-			const makeRTE = (label: string, delayMs: number): RTE.ReaderTaskEither<unknown, string, string> =>
-				(_ctx: unknown) => () => new Promise((resolve) => setTimeout(() => {
-					log.push(label);
-					resolve(E.right(label));
-				}, delayMs));
+			const makeRTE =
+				(label: string, delayMs: number): RTE.ReaderTaskEither<unknown, string, string> =>
+				(_ctx: unknown) =>
+				() =>
+					new Promise((resolve) =>
+						setTimeout(() => {
+							log.push(label);
+							resolve(E.right(label));
+						}, delayMs),
+					);
 
 			const tasks = {
 				a: makeRTE("a", 50),
@@ -159,8 +190,7 @@ describe("Sequence execution ordering (regression)", () => {
 				c: makeRTE("c", 10),
 			};
 
-			// biome-ignore lint/suspicious/noExplicitAny: mixed context types require cast
-			const result = sequenceObjectT3(RTE.RTE)(tasks as any);
+			const result = sequenceObjectT3(RTE.RTE)(tasks);
 			const either = await RTE.run({})(result)();
 
 			expect(either).toEqual(E.right({ a: "a", b: "b", c: "c" }));
@@ -210,10 +240,12 @@ describe("Sequence execution ordering (regression)", () => {
 
 			const t1 = makeTrackedTaskEither(1, 20, log);
 			const t2: TE.TaskEither<string, number> = () =>
-				new Promise((resolve) => setTimeout(() => {
-					log.push(2);
-					resolve(E.left("error at 2"));
-				}, 20));
+				new Promise((resolve) =>
+					setTimeout(() => {
+						log.push(2);
+						resolve(E.left("error at 2"));
+					}, 20),
+				);
 			const t3 = makeTrackedTaskEither(3, 20, log);
 
 			const result = sequenceT2(TE.TE)([t1, t2, t3]);

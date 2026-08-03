@@ -3,59 +3,44 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import * as L from "@/list";
-import { pipe } from "@/pipe";
-import { id } from "@/id";
 import { Kind3, URIS3 } from "@/URIS3";
-import { Monad3 } from "@/monad";
 import { Applicative3 } from "@/applicative";
 import { Delayable3 } from "@/delayable";
+import { id } from "@/id";
+import * as L from "@/list";
+import { Monad3 } from "@/monad";
+import { pipe } from "@/pipe";
+import type { EnsureKinds3, UnionToIntersection } from "./hkt-inference";
 
 // Tipo de la instancia de la mónada
 type Instance<F extends URIS3> = Monad3<F> & Applicative3<F> & Delayable3<F>;
 
-// Utilidad para convertir uniones en intersecciones
-// biome-ignore lint/suspicious/noExplicitAny: necesario para la transformación de tipos
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
-	? I
-	: never;
-
-// Tipo para argumentos (permite inferencia de tipos)
-type ArgsType<F extends URIS3> =
-	// biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-	| [Kind3<F, any, any, any>, ...Kind3<F, any, any, any>[]]
-	// biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-	| Kind3<F, any, any, any>[];
-
 // Tipo para los valores que contiene cada mónada, como un array de `Kind3<F, R, E, A>`
-type VOK<F extends URIS3, Args> = {
-	// biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-	[K in keyof Args]: Args[K] extends Kind3<F, any, any, infer A> ? A : never;
+type VOK<F extends URIS3, Args extends unknown[]> = {
+	[K in keyof Args]: Args[K] extends Kind3<F, infer _R, infer _E, infer A> ? A : never;
+};
+
+type Contexts<F extends URIS3, Args extends unknown[]> = {
+	[K in keyof Args]: Args[K] extends Kind3<F, infer R, infer _E, infer _A> ? R : never;
+};
+
+type Errors<F extends URIS3, Args extends unknown[]> = {
+	[K in keyof Args]: Args[K] extends Kind3<F, infer _R, infer E, infer _A> ? E : never;
 };
 
 // Extrae y combina todos los contextos R1 & R2 & R3 & ...
-type UnionR<F extends URIS3, Args> = UnionToIntersection<
-	Args extends readonly unknown[]
-		? // biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-			Args[number] extends Kind3<F, infer R, any, any>
-			? R
-			: never
-		: never
+type UnionR<F extends URIS3, Args extends unknown[]> = UnionToIntersection<
+	Contexts<F, Args>[number]
 >;
 
 // Extrae y une todos los tipos de error E1 | E2 | E3 | ...
-type UnionE<F extends URIS3, Args> = Args extends readonly unknown[]
-	? // biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-		Args[number] extends Kind3<F, any, infer E, any>
-		? E
-		: never
-	: never;
+type UnionE<F extends URIS3, Args extends unknown[]> = Errors<F, Args>[number];
 
 type Config = { concurrency?: number; delay?: number };
 
 const reduceFn =
 	<F extends URIS3>(mo: Instance<F>) =>
-	<R, E, Args extends ArgsType<F>>(
+	<R, E, Args extends unknown[]>(
 		acc: Kind3<F, R, E, VOK<F, Args>>,
 		curr: Kind3<F, R, E, unknown>,
 	) => {
@@ -95,8 +80,9 @@ const reduceFn =
 export const concurrency3 =
 	<F extends URIS3>(mo: Instance<F>) =>
 	(config?: Config) =>
-	<Args extends ArgsType<F>>(
+	<const Args extends unknown[]>(
 		args: Args,
+		..._validation: Args extends EnsureKinds3<F, Args> ? [] : [invalid: never]
 	): Kind3<F, UnionR<F, Args>, UnionE<F, Args>, VOK<F, Args>> => {
 		type R = UnionR<F, Args>;
 		type E = UnionE<F, Args>;
@@ -104,7 +90,7 @@ export const concurrency3 =
 		if (L.isEmpty(args)) return mo.of<R, E, VOK<F, Args>>([] as unknown as VOK<F, Args>);
 
 		let acc = mo.of<R, E, VOK<F, Args>>([] as unknown as VOK<F, Args>);
-		let remaining = args;
+		let remaining: Args = args;
 		const concurrencyNumber = config?.concurrency ?? args.length;
 
 		// Usar iteración en lugar de recursión para evitar fugas de memoria
@@ -116,7 +102,10 @@ export const concurrency3 =
 				acc,
 				config?.delay ? mo.delay(config.delay) : id(),
 				mo.chain((values) =>
-					pipe(portion as Kind3<F, R, E, unknown>[], L.reduce(mo.of(values), reduceFn(mo))),
+					pipe(
+						portion as unknown as Kind3<F, R, E, unknown>[],
+						L.reduce(mo.of(values), reduceFn(mo)),
+					),
 				),
 			);
 		}

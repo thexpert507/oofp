@@ -6,8 +6,7 @@
 import { Fn } from "./function.ts";
 import { Functor } from "./functor.ts";
 import type { Maybe } from "./maybe.ts";
-import * as M from "./maybe.ts";
-import * as U from "./utils";
+import { groupBy as groupIterableBy, indexBy as indexIterableBy } from "./utils/group-index";
 
 export const map =
 	<A, B>(fn: Fn<A, B>) =>
@@ -102,12 +101,12 @@ export const chunk =
 export const groupBy =
 	<A>(fn: Fn<A, string>) =>
 	(list: A[]): Record<string, A[]> =>
-		U.groupBy(fn)(list);
+		groupIterableBy(fn)(list);
 
 export const indexBy =
 	<A>(fn: Fn<A, string>) =>
 	(list: A[]): Record<string, A> =>
-		U.indexBy(fn)(list);
+		indexIterableBy(fn)(list);
 
 export const sort =
 	<A>(fn: Fn<{ a: A; b: A }, number>) =>
@@ -160,7 +159,7 @@ export const filterMap =
 		const result: B[] = [];
 		for (const item of list) {
 			const mb = fn(item);
-			if (M.isJust(mb)) result.push(mb.value);
+			if (mb.kind === "Just") result.push(mb.value);
 		}
 		return result;
 	};

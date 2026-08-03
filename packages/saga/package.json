@@ -46,7 +46,7 @@
 		"coverage": "vitest run --coverage"
 	},
 	"peerDependencies": {
-		"@oofp/core": "workspace:*"
+		"@oofp/core": "workspace:^"
 	},
 	"devDependencies": {
 		"@oofp/core": "workspace:*"

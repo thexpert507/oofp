@@ -3,50 +3,40 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import { pipe } from "@/pipe";
 import { Kind3, URIS3 } from "@/URIS3";
+import { Applicative3 } from "@/applicative";
 import * as L from "@/list";
 import { Monad3 } from "@/monad";
-import { Applicative3 } from "@/applicative";
+import { pipe } from "@/pipe";
+import type { EnsureKind3Record, Kind3Parts, UnionToIntersection } from "./hkt-inference";
 import type { Simplify } from "./simplify";
 
 // Definimos el tipo Instance para Monad y Applicative
 type Instance<F extends URIS3> = Monad3<F> & Applicative3<F>;
 
-// Utilidad para convertir uniones en intersecciones
-// biome-ignore lint/suspicious/noExplicitAny: necesario para la transformación de tipos
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
-	? I
-	: never;
-
 // Extrae todos los contextos R y los convierte en intersección (R1 & R2 & R3)
-type UnionR<F extends URIS3, Args> = UnionToIntersection<
-	// biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-	Args extends Record<string, Kind3<F, any, any, any>>
-		? {
-				// biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-				[K in keyof Args]: Args[K] extends Kind3<F, infer R, any, any> ? R : never;
-			}[keyof Args]
-		: never
+type UnionR<F extends URIS3, Args extends Record<string, unknown>> = UnionToIntersection<
+	Kind3Parts<F, Args[keyof Args]>[0]
 >;
 
 // Extrae la unión de todos los tipos de error del objeto (E1 | E2 | E3)
-// biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-type UnionE<F extends URIS3, Args> = Args extends Record<string, Kind3<F, any, any, any>>
-	? {
-			// biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-			[K in keyof Args]: Args[K] extends Kind3<F, any, infer E, any> ? E : never;
-		}[keyof Args]
-	: never;
+type UnionE<F extends URIS3, Args extends Record<string, unknown>> = Kind3Parts<
+	F,
+	Args[keyof Args]
+>[1];
 
 // Mapea cada propiedad del objeto extrayendo el tipo de valor A
-type InferA<F extends URIS3, Args> = {
-	// biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-	[K in keyof Args]: Args[K] extends Kind3<F, any, any, infer A> ? A : never;
+type InferA<F extends URIS3, Args extends Record<string, unknown>> = {
+	[K in keyof Args]: Kind3Parts<F, Args[K]>[2];
 };
 
 // Resultado con el tipo completamente expandido
-type Result<F extends URIS3, R, E, Args> = Kind3<F, R, E, Simplify<InferA<F, Args>>>;
+type Result<F extends URIS3, R, E, Args extends Record<string, unknown>> = Kind3<
+	F,
+	R,
+	E,
+	Simplify<InferA<F, Args>>
+>;
 
 /**
  * Secuencia un objeto de mónadas Kind3.
@@ -68,9 +58,8 @@ type Result<F extends URIS3, R, E, Args> = Kind3<F, R, E, Simplify<InferA<F, Arg
  */
 export const sequenceObjectT3 =
 	<F extends URIS3>(mo: Instance<F>) =>
-	// biome-ignore lint/suspicious/noExplicitAny: necesario para la inferencia correcta de tipos
-	<Args extends Record<string, Kind3<F, any, any, any>>>(
-		args: Args,
+	<Args extends Record<string, unknown>>(
+		args: Args & EnsureKind3Record<F, NoInfer<Args>>,
 	): Result<F, UnionR<F, Args>, UnionE<F, Args>, Args> => {
 		type R = UnionR<F, Args>;
 		type E = UnionE<F, Args>;
@@ -87,7 +76,12 @@ export const sequenceObjectT3 =
 						({ ...values, [key]: result }) as Values;
 				return pipe(
 					acc,
-					mo.chain((values) => pipe(curr, mo.map((result) => merge(result)(values)))),
+					mo.chain((values) =>
+						pipe(
+							curr,
+							mo.map((result) => merge(result)(values)),
+						),
+					),
 				) as Kind3<F, R, E, Values>;
 			}),
 		) as Result<F, R, E, Args>;

@@ -3,44 +3,43 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import { Kind2, URIS2 } from '@/URIS2'
-import { Monad2 } from '@/monad'
-import { Applicative2 } from '@/applicative'
-import { Delayable2 } from '@/delayable'
-import { OrElse2 } from '@/or-else'
-import { BiPointed2 } from '@/bi-pointed'
-import { concurrency2 } from './concurrency-2'
-import { pipe } from '@/pipe'
+import { Kind2, URIS2 } from "@/URIS2";
+import { Applicative2 } from "@/applicative";
+import { BiPointed2 } from "@/bi-pointed";
+import { Delayable2 } from "@/delayable";
+import { Monad2 } from "@/monad";
+import { OrElse2 } from "@/or-else";
+import { pipe } from "@/pipe";
+import { concurrency2 } from "./concurrency-2";
+import type { EnsureKinds2 } from "./hkt-inference";
 
-type Instance<F extends URIS2> = Monad2<F> & Applicative2<F> & Delayable2<F> & OrElse2<F>
+type Instance<F extends URIS2> = Monad2<F> & Applicative2<F> & Delayable2<F> & OrElse2<F>;
 
-type ArgsType<F extends URIS2> =
-  | [Kind2<F, unknown, unknown>, ...Kind2<F, unknown, unknown>[]]
-  | Kind2<F, unknown, unknown>[]
+type SettledResults<F extends URIS2, G extends URIS2, Args extends unknown[]> = {
+	[K in keyof Args]: Args[K] extends Kind2<F, infer E, infer A> ? Kind2<G, E, A> : never;
+};
 
-type SettledResults<G extends URIS2, Args> = {
-  [K in keyof Args]: Args[K] extends Kind2<URIS2, infer _E, infer _A> ? Kind2<G, _E, _A> : never
-}
-
-type Config = { concurrency?: number; delay?: number }
+type Config = { concurrency?: number; delay?: number };
 
 export const concurrentSettled2 =
-  <F extends URIS2>(mo: Instance<F>) =>
-  <G extends URIS2>(collect: BiPointed2<G>) =>
-  (config?: Config) =>
-  <Args extends ArgsType<F>>(args: Args): Kind2<F, never, SettledResults<G, Args>> => {
-    const makeSafe = <E, A>(monad: Kind2<F, E, A>): Kind2<F, never, Kind2<G, E, A>> =>
-      pipe(
-        monad,
-        mo.map((result): Kind2<G, E, A> => collect.right<E, A>(result)),
-        mo.orElse((err): Kind2<F, never, Kind2<G, E, A>> => mo.of(collect.left<E, A>(err))),
-      )
+	<F extends URIS2>(mo: Instance<F>) =>
+	<G extends URIS2>(collect: BiPointed2<G>) =>
+	(config?: Config) =>
+	<const Args extends unknown[]>(
+		args: Args,
+		..._validation: Args extends EnsureKinds2<F, Args> ? [] : [invalid: never]
+	): Kind2<F, never, SettledResults<F, G, Args>> => {
+		const makeSafe = <E, A>(monad: Kind2<F, E, A>): Kind2<F, never, Kind2<G, E, A>> =>
+			pipe(
+				monad,
+				mo.map((result): Kind2<G, E, A> => collect.right<E, A>(result)),
+				mo.orElse((err): Kind2<F, never, Kind2<G, E, A>> => mo.of(collect.left<E, A>(err))),
+			);
 
-    type SafeArg = Kind2<F, never, Kind2<G, unknown, unknown>>
-    const safeMonads = args.map((arg) => makeSafe(arg as Kind2<F, unknown, unknown>)) as Array<SafeArg>
-    return concurrency2(mo)(config)(safeMonads as unknown as Args) as unknown as Kind2<
-      F,
-      never,
-      SettledResults<G, Args>
-    >
-  }
+		type SafeArg = Kind2<F, never, Kind2<G, unknown, unknown>>;
+		const safeMonads = args.map((arg) =>
+			makeSafe(arg as unknown as Kind2<F, unknown, unknown>),
+		) as Array<SafeArg>;
+		const runConcurrent = concurrency2(mo)(config) as (values: SafeArg[]) => unknown;
+		return runConcurrent(safeMonads) as Kind2<F, never, SettledResults<F, G, Args>>;
+	};

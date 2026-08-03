@@ -3,70 +3,70 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import { describe, it, expect } from "vitest";
-import * as M from "@/maybe";
-import * as T from "@/task";
 import * as E from "@/either";
-import * as TE from "@/task-either";
+import * as M from "@/maybe";
 import * as RTE from "@/reader-task-either";
-import { sequenceT } from "@/utils";
+import * as T from "@/task";
+import * as TE from "@/task-either";
+import { sequenceT, sequenceT3 } from "@/utils";
+import { describe, expect, it } from "vitest";
 
 describe("Sequence array", () => {
-  it("should be able to sequence two maybes", () => {
-    const result = sequenceT(M)([M.just(1), M.just("2")]);
+	it("should be able to sequence two maybes", () => {
+		const result = sequenceT(M)([M.just(1), M.just("2")]);
 
-    expect(M.toNullable(result)).toEqual([1, "2"]);
-  });
+		expect(M.toNullable(result)).toEqual([1, "2"]);
+	});
 
-  it("should be able to sequence two tasks", async () => {
-    const result = sequenceT(T)([T.of(1), T.of("2")]);
+	it("should be able to sequence two tasks", async () => {
+		const result = sequenceT(T)([T.of(1), T.of("2")]);
 
-    expect(await result()).toEqual([1, "2"]);
-  });
+		expect(await result()).toEqual([1, "2"]);
+	});
 
-  it("should be able to sequence two either", () => {
-    const result = sequenceT(E)([E.right(1), E.right("2")]);
+	it("should be able to sequence two either", () => {
+		const result = sequenceT(E)([E.right(1), E.right("2")]);
 
-    expect(result).toEqual(E.right([1, "2"]));
-  });
+		expect(result).toEqual(E.right([1, "2"]));
+	});
 
-  it("should be able to sequence two either with different types", () => {
-    const e1 = E.right<string, number>(1);
-    const e2 = E.right<string, string>("2");
-    const e3 = E.right<string, number>(3);
-    const e4 = E.left<string, number>("El unico error");
+	it("should be able to sequence two either with different types", () => {
+		const e1 = E.right<string, number>(1);
+		const e2 = E.right<string, string>("2");
+		const e3 = E.right<string, number>(3);
+		const e4 = E.left<string, number>("El unico error");
 
-    const arr: E.Either<string, number | string>[] = [e1, e2, e3, e4];
+		const arr: E.Either<string, number | string>[] = [e1, e2, e3, e4];
 
-    const result = sequenceT(E)(arr);
+		const result = sequenceT(E)(arr);
 
-    expect(result).toEqual(E.left("El unico error"));
-  });
+		expect(result).toEqual(E.left("El unico error"));
+	});
 
-  it("should be able to sequence two task either", async () => {
-    const result = sequenceT(TE)([TE.right(1), TE.right("2")]);
+	it("should be able to sequence two task either", async () => {
+		const result = sequenceT(TE)([TE.right(1), TE.right("2")]);
 
-    expect(await result()).toEqual(E.right([1, "2"]));
-  });
+		expect(await result()).toEqual(E.right([1, "2"]));
+	});
 
-  it("should be able to sequence two task either with different types", async () => {
-    const result = sequenceT(TE)([TE.right(1), TE.left("El unico error")]);
+	it("should be able to sequence two task either with different types", async () => {
+		const result = sequenceT(TE)([TE.right(1), TE.left("El unico error")]);
 
-    expect(await result()).toEqual(E.left("El unico error"));
-  });
+		expect(await result()).toEqual(E.left("El unico error"));
+	});
 
-  it("should be able to sequence three task either with different contexts", async () => {
-    type C1 = { c1: number };
-    type C2 = { c2: string };
-    type C3 = { c3: boolean };
+	it("should be able to sequence three task either with different contexts", async () => {
+		type C1 = { c1: number };
+		type C2 = { c2: string };
+		type C3 = { c3: boolean };
 
-    const rte1 = RTE.of<C1, number>(1);
-    const rte2 = RTE.of<C2, string>("2");
-    const rte3 = RTE.of<C3, boolean>(true);
-    const arr = [rte1, rte2, rte3];
+		const rte1 = RTE.of<C1, number>(1);
+		const rte2 = RTE.of<C2, string>("2");
+		const rte3 = RTE.of<C3, boolean>(true);
+		const arr = [rte1, rte2, rte3];
 
-    const result = sequenceT(RTE)(arr as any);
-    const response = await RTE.run({ c1: 1, c2: "a", c3: true })(result)();
-    expect(response).toEqual(E.right([1, "2", true]));
-  });
+		const result = sequenceT3(RTE.RTE)(arr);
+		const response = await RTE.run({ c1: 1, c2: "a", c3: true })(result)();
+		expect(response).toEqual(E.right([1, "2", true]));
+	});
 });

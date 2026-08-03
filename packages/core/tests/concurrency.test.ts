@@ -3,13 +3,13 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import { describe, it, expect } from "vitest";
+import * as E from "@/either";
+import { pipe } from "@/pipe";
+import * as RTE from "@/reader-task-either";
 import * as T from "@/task";
 import * as TE from "@/task-either";
-import * as E from "@/either";
-import * as RTE from "@/reader-task-either";
-import { concurrencyT, concurrency2, concurrency3 } from "@/utils";
-import { pipe } from "@/pipe";
+import { concurrency2, concurrency3, concurrencyT } from "@/utils";
+import { describe, expect, it } from "vitest";
 
 describe("Concurrency", () => {
 	it.concurrent("should be able to run two tasks concurrently", async () => {
@@ -55,8 +55,7 @@ describe("Concurrency", () => {
 		const rte3 = RTE.of<Config, boolean>(true);
 		const rte4 = RTE.of<Logger, number>(42);
 
-		// biome-ignore lint/suspicious/noExplicitAny: necesario para el test
-		const arr = [rte1, rte2, rte3, rte4] as any;
+		const arr = [rte1, rte2, rte3, rte4];
 
 		const result = concurrently(arr);
 
@@ -77,8 +76,7 @@ describe("Concurrency", () => {
 		const rte2 = RTE.left<Config, string, string>("error occurred");
 		const rte3 = RTE.of<Config, boolean, string>(true);
 
-		// biome-ignore lint/suspicious/noExplicitAny: necesario para el test
-		const arr = [rte1, rte2, rte3] as any;
+		const arr = [rte1, rte2, rte3];
 
 		const result = concurrently(arr);
 

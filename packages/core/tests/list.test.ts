@@ -86,3 +86,24 @@ describe("filterMap", () => {
 		expect(result).toEqual([]);
 	});
 });
+
+describe("list indexing", () => {
+	it("groups values by the selected key", () => {
+		expect(L.groupBy((value: number) => (value % 2 === 0 ? "even" : "odd"))([1, 2, 3])).toEqual({
+			odd: [1, 3],
+			even: [2],
+		});
+	});
+
+	it("indexes values by the selected key", () => {
+		const values = [
+			{ id: "first", value: 1 },
+			{ id: "second", value: 2 },
+		];
+
+		expect(L.indexBy((item: (typeof values)[number]) => item.id)(values)).toEqual({
+			first: values[0],
+			second: values[1],
+		});
+	});
+});

@@ -3,13 +3,13 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import { describe, it, expect } from "vitest";
+import * as E from "@/either";
+import { pipe } from "@/pipe";
+import * as RTE from "@/reader-task-either";
 import * as T from "@/task";
 import * as TE from "@/task-either";
-import * as E from "@/either";
-import * as RTE from "@/reader-task-either";
-import { concurrencyObjectT, concurrencyObject2, concurrencyObject3 } from "@/utils";
-import { pipe } from "@/pipe";
+import { concurrencyObject2, concurrencyObject3, concurrencyObjectT } from "@/utils";
+import { describe, expect, it } from "vitest";
 
 describe("Concurrency Object", () => {
 	it.concurrent("should be able to run task objects concurrently", async () => {
@@ -78,14 +78,11 @@ describe("Concurrency Object", () => {
 
 		const tasks = {
 			user: RTE.of<Config, { name: string; age: number }>({ name: "John", age: 30 }),
-			posts: RTE.of<Logger, Array<{ id: number; title: string }>>([
-				{ id: 1, title: "Hello" },
-			]),
+			posts: RTE.of<Logger, Array<{ id: number; title: string }>>([{ id: 1, title: "Hello" }]),
 			settings: RTE.of<Config, { theme: string }>({ theme: "dark" }),
 		};
 
-		// biome-ignore lint/suspicious/noExplicitAny: necesario para el test
-		const result = concurrently(tasks as any);
+		const result = concurrently(tasks);
 
 		const context = {
 			apiUrl: "https://api.example.com",
@@ -112,8 +109,7 @@ describe("Concurrency Object", () => {
 			settings: RTE.of<Config, { theme: string }, string>({ theme: "dark" }),
 		};
 
-		// biome-ignore lint/suspicious/noExplicitAny: necesario para el test
-		const result = concurrently(tasks as any);
+		const result = concurrently(tasks);
 
 		const context = { apiUrl: "https://api.example.com" };
 

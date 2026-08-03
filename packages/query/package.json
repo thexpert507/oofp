@@ -48,7 +48,7 @@
 		"bench": "vitest bench"
 	},
 	"peerDependencies": {
-		"@oofp/core": "workspace:*",
+		"@oofp/core": "workspace:^",
 		"redis": "^5.0.0"
 	},
 	"peerDependenciesMeta": {
